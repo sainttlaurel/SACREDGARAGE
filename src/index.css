@@ -17,6 +17,16 @@
     --metallic: #c0c0c0;
   }
 
+  .light {
+    --background: 0 0% 100%;
+    --background-soft: 0 0% 98%;
+    --foreground: 0 0% 0%;
+    --foreground-muted: 0 0% 40%;
+    --foreground-faint: 0 0% 65%;
+    --border: 0 0% 90%;
+    --card: 0 0% 96%;
+  }
+
   * {
     @apply border-border;
   }
@@ -25,6 +35,7 @@
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: 'cv11', 'ss01';
     font-variation-settings: 'opsz' 32;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   html {
@@ -42,6 +53,14 @@
     background-size: 200px 200px;
     mix-blend-mode: overlay;
     opacity: 0.35;
+  }
+
+  .dark .grain {
+    opacity: 0.35;
+  }
+
+  .light .grain {
+    opacity: 0.15;
   }
 
   .container-luxury {

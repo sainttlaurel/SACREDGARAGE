@@ -9,6 +9,7 @@ import Showreel from './components/Showreel'
 import CTA from './components/CTA'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
+import ThemeToggle from './components/ThemeToggle'
 
 function App() {
   const [isLoading, setIsLoading] = useState(true)
@@ -37,6 +38,9 @@ function App() {
         <CTA />
         <Contact />
         <Footer />
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
       </div>
     </>
   )
