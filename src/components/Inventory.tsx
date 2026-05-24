@@ -130,8 +130,18 @@ const Inventory = () => {
 
   return (
     <>
-      <section id="inventory" className="py-32 bg-background-soft">
-      <div className="container-luxury">
+      <section id="inventory" className="relative py-32 overflow-hidden">
+      {/* Background Image - Subtle overlay */}
+      <div className="absolute inset-0 opacity-5">
+        <img
+          src="/cars/20.jpg"
+          alt="Background"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background-soft via-background-soft/98 to-background-soft" />
+      </div>
+
+      <div className="container-luxury relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

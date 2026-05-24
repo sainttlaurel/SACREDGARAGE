@@ -76,8 +76,18 @@ const Parts = () => {
 
   return (
     <>
-      <section id="parts" className="py-32 bg-background">
-      <div className="container-luxury">
+      <section id="parts" className="relative py-32 overflow-hidden">
+      {/* Background Image - Using car 1.jpg */}
+      <div className="absolute inset-0 opacity-5">
+        <img
+          src="/cars/1.jpg"
+          alt="Background"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/98 to-background" />
+      </div>
+
+      <div className="container-luxury relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

@@ -3,8 +3,18 @@ import { Mail, Phone, MapPin } from 'lucide-react'
 
 const Contact = () => {
   return (
-    <section id="contact" className="py-32 bg-background-soft">
-      <div className="container-luxury">
+    <section id="contact" className="relative py-32 overflow-hidden">
+      {/* Background Image - Using car 9.jpg */}
+      <div className="absolute inset-0 opacity-10">
+        <img
+          src="/cars/9.jpg"
+          alt="Background"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background-soft via-background-soft/95 to-background-soft" />
+      </div>
+
+      <div className="container-luxury relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           {/* Contact Info */}
           <motion.div

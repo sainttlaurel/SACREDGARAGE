@@ -4,14 +4,14 @@ import { ArrowUpRight } from 'lucide-react'
 const CTA = () => {
   return (
     <section className="relative py-32 overflow-hidden">
-      {/* Background Image */}
+      {/* Background Image - Using car 20.jpg */}
       <div className="absolute inset-0">
         <img
-          src="/image/bg.png"
-          alt="Luxury Showroom"
+          src="/cars/20.jpg"
+          alt="Premium Modified Vehicle"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-background/85" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/80" />
       </div>
 
       {/* Content */}

@@ -23,9 +23,9 @@ const Showreel = () => {
           viewport={{ once: true }}
           className="relative aspect-[21/9] rounded-sm overflow-hidden group cursor-pointer"
         >
-          {/* Poster Image */}
+          {/* Poster Image - Using car 23.jpg */}
           <img
-            src="/image/bg1.jpg"
+            src="/cars/23.jpg"
             alt="Showreel"
             className="w-full h-full object-cover"
           />
