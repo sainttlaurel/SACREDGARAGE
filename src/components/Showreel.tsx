@@ -1,10 +1,7 @@
 import { motion } from 'framer-motion'
 import { Play } from 'lucide-react'
-import { useState } from 'react'
 
 const Showreel = () => {
-  const [isPlaying, setIsPlaying] = useState(false)
-
   return (
     <section className="py-32">
       <div className="container-luxury">
@@ -25,7 +22,6 @@ const Showreel = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="relative aspect-[21/9] rounded-sm overflow-hidden group cursor-pointer"
-          onClick={() => setIsPlaying(true)}
         >
           {/* Poster Image */}
           <img

@@ -13,9 +13,9 @@ const vehicles = [
     location: 'Quezon City',
     description: 'All stock engine, 1st owner. Fresh repaint – gas & go. Cold AC, power windows/mirrors. Type R seats, MOMO steering wheel. JBL + Pioneer sound setup. Registered until 2026, complete papers. Fresh & reliable – perfect pang-daily/tambay!',
     specs: {
-      mileage: '1st Owner',
-      condition: 'Fresh Repaint',
-      registration: 'Until 2026'
+      'mileage': '1st Owner',
+      'condition': 'Fresh Repaint',
+      'registration': 'Until 2026'
     }
   },
   {
@@ -27,9 +27,9 @@ const vehicles = [
     location: 'Quezon City',
     description: '4.5L V8 Turbo Diesel, 4x4 AT. 128k kms, Toyota Commonwealth maintained. 100% orig paint, fresh in & out. Beige leather interior, 2 headrest monitors. 20" OEM rims + Dunlop Grandtrek (almost new). Ice-cold AC, no underchassis issues. 2 orig keys, updated reg, free transfer. Luxury + durability – built to last! Open for trade (with cash top-up).',
     specs: {
-      mileage: '128k kms',
-      engine: '4.5L V8 Turbo Diesel',
-      drivetrain: '4x4 AT'
+      'mileage': '128k kms',
+      'engine': '4.5L V8 Turbo Diesel',
+      'drivetrain': '4x4 AT'
     }
   },
   {
@@ -41,9 +41,9 @@ const vehicles = [
     location: 'Quezon City',
     description: '47k kms only, fresh PMS done. Brand new Amaron battery. 100% orig paint, complete papers. Old Man Emu BP-51 suspension + UCAs. SCS wheels + BFGoodrich KM3 set of 5. Borla headers + full Borla exhaust. AFE Momentum GT intake. Stage 4 projector retrofit headlights. ₱200K sound setup – Pioneer Z5050, Focal, Crescendo. Solid, built, and loaded – ready to roll! Open to trade + cash offers.',
     specs: {
-      mileage: '47k kms',
-      suspension: 'OME BP-51',
-      sound: '₱200K Setup'
+      'mileage': '47k kms',
+      'suspension': 'OME BP-51',
+      'sound': '₱200K Setup'
     }
   },
   {
@@ -55,9 +55,9 @@ const vehicles = [
     location: 'Quezon City',
     description: '3.2L Turbo Diesel, 6AT. 42k kms only, all original & excellent condition. Complete papers, 2 orig keys, manuals. Upgrades: TJM front/rear bumpers + rocksliders, TJM Pace suspension + ARB OME leafs + UCAs, 2" body lift + Bushwacker flares, Mastercraft MXT 35x12.5x20 tires, Safari snorkel + BRC exhaust, Roller lid w/ lock, All-LED headlights & fogs. Off-road ready, no issues – just gas & go! Open for swap/trade + cash offers.',
     specs: {
-      mileage: '42k kms',
-      engine: '3.2L Turbo Diesel',
-      modifications: 'Full Off-Road Build'
+      'mileage': '42k kms',
+      'engine': '3.2L Turbo Diesel',
+      'modifications': 'Full Off-Road Build'
     }
   }
 ]
