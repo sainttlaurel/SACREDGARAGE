@@ -11,17 +11,17 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
   const [videoError, setVideoError] = useState(false)
 
   useEffect(() => {
-    // Minimum display time of 2 seconds
+    // Minimum display time of 11 seconds
     const minTimer = setTimeout(() => {
       if (isVideoLoaded || videoError) {
         setShouldExit(true)
       }
-    }, 2000)
+    }, 11000)
 
-    // Fallback: Force exit after 5 seconds if video hasn't loaded
+    // Fallback: Force exit after 15 seconds if video hasn't loaded
     const maxTimer = setTimeout(() => {
       setShouldExit(true)
-    }, 5000)
+    }, 15000)
 
     return () => {
       clearTimeout(minTimer)
