@@ -17,6 +17,17 @@
     --metallic: #c0c0c0;
   }
 
+  html.light,
+  html.light body {
+    --background: 0 0% 100%;
+    --background-soft: 0 0% 98%;
+    --foreground: 0 0% 0%;
+    --foreground-muted: 0 0% 40%;
+    --foreground-faint: 0 0% 65%;
+    --border: 0 0% 90%;
+    --card: 0 0% 96%;
+  }
+
   .light {
     --background: 0 0% 100%;
     --background-soft: 0 0% 98%;
@@ -53,6 +64,14 @@
     background-size: 200px 200px;
     mix-blend-mode: overlay;
     opacity: 0.35;
+  }
+
+  html.dark .grain {
+    opacity: 0.35;
+  }
+
+  html.light .grain {
+    opacity: 0.15;
   }
 
   .dark .grain {

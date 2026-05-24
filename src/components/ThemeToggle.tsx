@@ -4,35 +4,43 @@ import { useEffect, useState } from 'react'
 
 const ThemeToggle = () => {
   const [isDark, setIsDark] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     // Check localStorage for saved theme
     const savedTheme = localStorage.getItem('theme')
-    if (savedTheme === 'light') {
-      setIsDark(false)
-      document.documentElement.classList.remove('dark')
-      document.documentElement.classList.add('light')
-    } else {
-      setIsDark(true)
-      document.documentElement.classList.add('dark')
-      document.documentElement.classList.remove('light')
-    }
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    
+    const shouldBeDark = savedTheme ? savedTheme === 'dark' : prefersDark
+    
+    setIsDark(shouldBeDark)
+    applyTheme(shouldBeDark)
   }, [])
+
+  const applyTheme = (dark: boolean) => {
+    const html = document.documentElement
+    if (dark) {
+      html.classList.add('dark')
+      html.classList.remove('light')
+      document.body.classList.add('dark')
+      document.body.classList.remove('light')
+    } else {
+      html.classList.remove('dark')
+      html.classList.add('light')
+      document.body.classList.remove('dark')
+      document.body.classList.add('light')
+    }
+  }
 
   const toggleTheme = () => {
     const newTheme = !isDark
     setIsDark(newTheme)
-    
-    if (newTheme) {
-      document.documentElement.classList.add('dark')
-      document.documentElement.classList.remove('light')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      document.documentElement.classList.add('light')
-      localStorage.setItem('theme', 'light')
-    }
+    applyTheme(newTheme)
+    localStorage.setItem('theme', newTheme ? 'dark' : 'light')
   }
+
+  if (!mounted) return null
 
   return (
     <motion.button
