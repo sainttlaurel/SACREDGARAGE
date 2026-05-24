@@ -3,7 +3,6 @@ import LoadingScreen from './components/LoadingScreen'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import Features from './components/Features'
-import FeaturedBuilds from './components/FeaturedBuilds'
 import Inventory from './components/Inventory'
 import Parts from './components/Parts'
 import GalleryWall from './components/GalleryWall'
@@ -34,7 +33,6 @@ function App() {
         <Navbar />
         <Hero />
         <Features />
-        <FeaturedBuilds />
         <Inventory />
         <Parts />
         <GalleryWall />
