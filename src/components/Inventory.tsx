@@ -5,6 +5,7 @@ import VehicleModal from './VehicleModal'
 
 const vehicles: Array<{
   image: string
+  images: string[]
   brand: string
   model: string
   year: number
@@ -15,6 +16,14 @@ const vehicles: Array<{
 }> = [
   {
     image: '/image/HONDA CIVIC.jpg',
+    images: [
+      '/image/HONDA CIVIC.jpg',
+      '/cars/1.jpg',
+      '/cars/2.jpg',
+      '/cars/3.jpg',
+      '/cars/4.jpg',
+      '/cars/5.jpg'
+    ],
     brand: 'Honda',
     model: 'Civic VTi VTEC',
     year: 1997,
@@ -29,6 +38,16 @@ const vehicles: Array<{
   },
   {
     image: '/image/TOYOTA LC200.jpg',
+    images: [
+      '/image/TOYOTA LC200.jpg',
+      '/cars/6.jpg',
+      '/cars/7.jpg',
+      '/cars/8.jpg',
+      '/cars/9.jpg',
+      '/cars/10.jpg',
+      '/cars/11.jpg',
+      '/cars/12.jpg'
+    ],
     brand: 'Toyota',
     model: 'Land Cruiser LC200',
     year: 2016,
@@ -43,6 +62,17 @@ const vehicles: Array<{
   },
   {
     image: '/image/TOYOTA FJ CRUISER.jpg',
+    images: [
+      '/image/TOYOTA FJ CRUISER.jpg',
+      '/cars/13.jpg',
+      '/cars/14.jpg',
+      '/cars/15.jpg',
+      '/cars/16.jpg',
+      '/cars/17.jpg',
+      '/cars/18.jpg',
+      '/cars/19.jpg',
+      '/cars/20.jpg'
+    ],
     brand: 'Toyota',
     model: 'FJ Cruiser 4x4',
     year: 2016,
@@ -57,6 +87,19 @@ const vehicles: Array<{
   },
   {
     image: '/image/FORD RANGER WILDTRACK.jpg',
+    images: [
+      '/image/FORD RANGER WILDTRACK.jpg',
+      '/cars/21.jpg',
+      '/cars/22.jpg',
+      '/cars/23.jpg',
+      '/cars/24.jpg',
+      '/cars/25.jpg',
+      '/cars/26.jpg',
+      '/cars/27.jpg',
+      '/cars/28.jpg',
+      '/cars/29.jpg',
+      '/cars/30.jpg'
+    ],
     brand: 'Ford',
     model: 'Ranger Wildtrak',
     year: 2018,

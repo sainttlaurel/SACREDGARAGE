@@ -1,12 +1,13 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Phone, Mail, MapPin, DollarSign } from 'lucide-react'
-import ImageZoom from './ImageZoom'
+import ImageGallery from './ImageGallery'
 
 interface VehicleModalProps {
   isOpen: boolean
   onClose: () => void
   vehicle: {
     image: string
+    images: string[]
     brand: string
     model: string
     year: number
@@ -59,15 +60,12 @@ const VehicleModal = ({ isOpen, onClose, vehicle }: VehicleModalProps) => {
               {/* Content */}
               <div className="flex-1 overflow-y-auto">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
-                  {/* Left Column - Image */}
+                  {/* Left Column - Image Gallery */}
                   <div className="space-y-6">
-                    <div className="aspect-[4/3] overflow-hidden rounded-sm border border-border">
-                      <ImageZoom
-                        src={vehicle.image}
-                        alt={`${vehicle.brand} ${vehicle.model}`}
-                        className="w-full h-full"
-                      />
-                    </div>
+                    <ImageGallery
+                      images={vehicle.images}
+                      alt={`${vehicle.brand} ${vehicle.model}`}
+                    />
 
                     {/* Price Card */}
                     <div className="card-luxury p-6">

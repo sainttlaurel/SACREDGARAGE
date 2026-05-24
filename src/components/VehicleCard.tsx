@@ -3,6 +3,7 @@ import { ArrowUpRight } from 'lucide-react'
 
 interface VehicleCardProps {
   image: string
+  images: string[]
   brand: string
   model: string
   year: number
@@ -14,7 +15,7 @@ interface VehicleCardProps {
   onViewDetails: () => void
 }
 
-const VehicleCard = ({ image, brand, model, year, price, location, description, specs, index, onViewDetails }: VehicleCardProps) => {
+const VehicleCard = ({ image, images, brand, model, year, price, location, description, specs, index, onViewDetails }: VehicleCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
@@ -33,6 +34,13 @@ const VehicleCard = ({ image, brand, model, year, price, location, description, 
           transition={{ duration: 0.6 }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
+        
+        {/* Image Count Badge */}
+        {images && images.length > 1 && (
+          <div className="absolute top-4 right-4 px-3 py-1 bg-background/80 backdrop-blur-sm border border-border rounded-sm">
+            <p className="text-xs uppercase tracking-luxury">{images.length} Photos</p>
+          </div>
+        )}
         
         {/* Hover Overlay */}
         <motion.div
