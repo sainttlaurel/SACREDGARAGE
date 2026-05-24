@@ -3,7 +3,16 @@ import { useState } from 'react'
 import VehicleCard from './VehicleCard'
 import VehicleModal from './VehicleModal'
 
-const vehicles = [
+const vehicles: Array<{
+  image: string
+  brand: string
+  model: string
+  year: number
+  price: string
+  location: string
+  description: string
+  specs: Record<string, string>
+}> = [
   {
     image: '/image/HONDA CIVIC.jpg',
     brand: 'Honda',

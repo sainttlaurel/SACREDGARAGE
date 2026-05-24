@@ -9,9 +9,7 @@ interface VehicleCardProps {
   price: string
   location: string
   description: string
-  specs: {
-    [key: string]: string
-  }
+  specs: Record<string, string>
   index: number
   onViewDetails: () => void
 }
