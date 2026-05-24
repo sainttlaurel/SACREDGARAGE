@@ -4,16 +4,17 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        background: 'hsl(0, 0%, 0%)',
-        'background-soft': 'hsl(0, 0%, 5%)',
-        foreground: 'hsl(0, 0%, 100%)',
-        'foreground-muted': 'hsl(0, 0%, 60%)',
-        'foreground-faint': 'hsl(0, 0%, 35%)',
-        border: 'hsl(0, 0%, 15%)',
-        card: 'hsl(0, 0%, 7%)',
+        background: 'hsl(var(--background) / <alpha-value>)',
+        'background-soft': 'hsl(var(--background-soft) / <alpha-value>)',
+        foreground: 'hsl(var(--foreground) / <alpha-value>)',
+        'foreground-muted': 'hsl(var(--foreground-muted) / <alpha-value>)',
+        'foreground-faint': 'hsl(var(--foreground-faint) / <alpha-value>)',
+        border: 'hsl(var(--border) / <alpha-value>)',
+        card: 'hsl(var(--card) / <alpha-value>)',
         'motorsport-red': '#c1121f',
         'motorsport-blue': '#0a1f44',
         metallic: '#c0c0c0',
@@ -29,3 +30,4 @@ export default {
   },
   plugins: [],
 }
+
