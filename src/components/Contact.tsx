@@ -1,7 +1,50 @@
 import { motion } from 'framer-motion'
 import { Mail, Phone, MapPin } from 'lucide-react'
+import { useState } from 'react'
 
 const Contact = () => {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    message: ''
+  })
+  const [submitted, setSubmitted] = useState(false)
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Create inquiry object
+    const inquiry = {
+      id: Date.now().toString(),
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phone: formData.phone,
+      message: formData.message,
+      status: 'new' as const,
+      createdAt: new Date().toISOString()
+    }
+
+    // Save to localStorage
+    const existingInquiries = JSON.parse(localStorage.getItem('inquiries') || '[]')
+    existingInquiries.push(inquiry)
+    localStorage.setItem('inquiries', JSON.stringify(existingInquiries))
+
+    // Reset form
+    setFormData({ firstName: '', lastName: '', email: '', phone: '', message: '' })
+    setSubmitted(true)
+
+    // Hide success message after 3 seconds
+    setTimeout(() => setSubmitted(false), 3000)
+  }
+
   return (
     <section id="contact" className="relative py-32 overflow-hidden">
       {/* Background Image - Using car 9.jpg */}
@@ -81,12 +124,26 @@ const Contact = () => {
             viewport={{ once: true }}
             className="card-luxury p-8"
           >
-            <form className="space-y-6">
+            {submitted && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-4 bg-green-500/20 text-green-400 rounded-sm text-sm"
+              >
+                ✓ Thank you! Your inquiry has been received. We'll get back to you soon.
+              </motion.div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="label-small block mb-3">First Name</label>
                   <input
                     type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    required
                     className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors"
                     placeholder="John"
                   />
@@ -95,6 +152,10 @@ const Contact = () => {
                   <label className="label-small block mb-3">Last Name</label>
                   <input
                     type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    required
                     className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors"
                     placeholder="Doe"
                   />
@@ -105,6 +166,10 @@ const Contact = () => {
                 <label className="label-small block mb-3">Email</label>
                 <input
                   type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
                   className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors"
                   placeholder="john@example.com"
                 />
@@ -114,6 +179,10 @@ const Contact = () => {
                 <label className="label-small block mb-3">Phone</label>
                 <input
                   type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
                   className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors"
                   placeholder="+1 (234) 567-890"
                 />
@@ -122,6 +191,10 @@ const Contact = () => {
               <div>
                 <label className="label-small block mb-3">Message</label>
                 <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  required
                   rows={5}
                   className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors resize-none"
                   placeholder="Tell us about your dream vehicle or the parts you're looking for..."
