@@ -1,13 +1,26 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Trash2, Phone, Mail, MapPin, CreditCard, Truck, MessageSquare, ExternalLink } from 'lucide-react'
+import { Trash2, Phone, Mail, MapPin, CreditCard, Truck, MessageSquare, ExternalLink, Download, Search } from 'lucide-react'
 import { partOrdersService, PartOrder } from '../../lib/supabase'
+import {
+  exportPartOrders,
+} from '../../lib/adminUtils'
 
 const AdminPartOrders = () => {
   const [orders, setOrders] = useState<PartOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'new' | 'contacted' | 'confirmed' | 'completed'>('all')
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortBy, setSortBy] = useState<'date' | 'name'>('date')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     loadOrders()
@@ -67,6 +80,39 @@ const AdminPartOrders = () => {
     ? orders 
     : orders.filter(o => o.status === filter)
 
+  // Apply search and sort
+  let processedOrders = filteredOrders.filter(o => {
+    if (!searchTerm.trim()) return true
+    const term = searchTerm.toLowerCase()
+    return (
+      o.partName.toLowerCase().includes(term) ||
+      o.customerName.toLowerCase().includes(term) ||
+      o.customerEmail.toLowerCase().includes(term) ||
+      o.customerPhone.includes(term)
+    )
+  })
+
+  // Sort
+  processedOrders = [...processedOrders].sort((a, b) => {
+    let compareA: any
+    let compareB: any
+
+    switch (sortBy) {
+      case 'name':
+        compareA = a.customerName.toLowerCase()
+        compareB = b.customerName.toLowerCase()
+        break
+      case 'date':
+      default:
+        compareA = new Date(a.createdAt).getTime()
+        compareB = new Date(b.createdAt).getTime()
+    }
+
+    if (compareA < compareB) return sortOrder === 'asc' ? -1 : 1
+    if (compareA > compareB) return sortOrder === 'asc' ? 1 : -1
+    return 0
+  })
+
   const getStatusColor = (status: PartOrder['status']) => {
     switch (status) {
       case 'new':
@@ -93,11 +139,56 @@ const AdminPartOrders = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h2 className="font-serif text-3xl mb-2">Part Orders</h2>
-        <p className="text-foreground-muted">
-          {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''} {filter !== 'all' && `(${filter})`}
-        </p>
+      <div className="flex items-center justify-between flex-wrap gap-2 mb-6">
+        <div>
+          <h2 className="font-serif text-3xl mb-2">Part Orders</h2>
+          <p className="text-foreground-muted text-sm">
+            {processedOrders.length} order{processedOrders.length !== 1 ? 's' : ''} {filter !== 'all' && `(${filter})`}
+          </p>
+        </div>
+        <button
+          onClick={() => exportPartOrders(processedOrders)}
+          className="flex items-center gap-2 px-3 py-2 bg-green-500/20 text-green-400 rounded-sm hover:bg-green-500/30 text-sm"
+          title="Export to CSV"
+        >
+          <Download size={16} />
+          <span className="hidden sm:inline">Export</span>
+        </button>
+      </div>
+
+      {/* Search and Sort Controls */}
+      <div className="space-y-3 mb-4 p-4 bg-background/50 rounded-sm">
+        {/* Search */}
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-3 text-foreground-muted" />
+          <input
+            type="text"
+            placeholder="Search by part name, customer name, email, phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-background border border-border px-3 py-2 pl-9 text-sm rounded-sm focus:outline-none focus:border-foreground"
+          />
+        </div>
+
+        {/* Sort Controls */}
+        <div className={isMobile ? 'space-y-2' : 'flex gap-2'}>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="flex-1 bg-background border border-border px-3 py-2 text-sm rounded-sm focus:outline-none focus:border-foreground"
+          >
+            <option value="date">Sort by Date</option>
+            <option value="name">Sort by Customer Name</option>
+          </select>
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as any)}
+            className="flex-1 bg-background border border-border px-3 py-2 text-sm rounded-sm focus:outline-none focus:border-foreground"
+          >
+            <option value="desc">Newest First</option>
+            <option value="asc">Oldest First</option>
+          </select>
+        </div>
       </div>
 
       {/* Filter Tabs */}
@@ -118,13 +209,13 @@ const AdminPartOrders = () => {
       </div>
 
       {/* Orders List */}
-      {filteredOrders.length === 0 ? (
+      {processedOrders.length === 0 ? (
         <div className="text-center py-12 card-luxury">
           <p className="text-foreground-muted">No orders found</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredOrders.map((order, index) => (
+          {processedOrders.map((order, index) => (
             <motion.div
               key={order.id}
               initial={{ opacity: 0, y: 20 }}

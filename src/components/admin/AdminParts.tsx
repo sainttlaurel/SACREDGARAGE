@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Edit2, Trash2, Plus, Save, X } from 'lucide-react'
+import { Edit2, Trash2, Plus, Save, X, Download, Search } from 'lucide-react'
 import { partsService, Part } from '../../lib/supabase'
+import {
+  filterParts,
+  exportParts,
+  getPartStats,
+} from '../../lib/adminUtils'
 
 const AdminParts = () => {
   const [parts, setParts] = useState<Part[]>([])
@@ -9,6 +14,12 @@ const AdminParts = () => {
   const [editForm, setEditForm] = useState<Partial<Part>>({})
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterAvailable, setFilterAvailable] = useState<boolean | undefined>(undefined)
+  const [sortBy, setSortBy] = useState<'date' | 'name' | 'price'>('date')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [stats, setStats] = useState({ total: 0, available: 0, sold: 0 })
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [newPart, setNewPart] = useState<Partial<Part>>({
     image: '',
     category: '',
@@ -21,6 +32,12 @@ const AdminParts = () => {
   })
 
   useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
     loadParts()
   }, [])
 
@@ -28,6 +45,7 @@ const AdminParts = () => {
     try {
       const data = await partsService.getAll()
       setParts(data)
+      setStats(getPartStats(data))
     } catch (error) {
       console.error('Error loading parts:', error)
     } finally {
@@ -121,16 +139,120 @@ const AdminParts = () => {
     return <div className="text-center py-12">Loading parts...</div>
   }
 
+  // Calculate filtered parts
+  const filteredParts = filterParts(parts, {
+    searchTerm,
+    available: filterAvailable,
+    sortBy,
+    sortOrder,
+  })
+
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2 mb-6">
         <h2 className="heading-section">Parts Inventory</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={() => exportParts(filteredParts)}
+            className="flex items-center gap-2 px-3 py-2 bg-green-500/20 text-green-400 rounded-sm hover:bg-green-500/30 text-sm"
+            title="Export to CSV"
+          >
+            <Download size={16} />
+            <span className="hidden sm:inline">Export</span>
+          </button>
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <Plus size={18} />
+            <span className="hidden sm:inline">Add Part</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="p-2 bg-background/50 rounded-sm text-center">
+          <p className="text-xs text-foreground-muted">Total</p>
+          <p className="text-lg font-semibold">{stats.total}</p>
+        </div>
+        <div className="p-2 bg-green-500/10 rounded-sm text-center">
+          <p className="text-xs text-green-400">Available</p>
+          <p className="text-lg font-semibold text-green-400">{stats.available}</p>
+        </div>
+        <div className="p-2 bg-motorsport-red/10 rounded-sm text-center">
+          <p className="text-xs text-motorsport-red">Sold</p>
+          <p className="text-lg font-semibold text-motorsport-red">{stats.sold}</p>
+        </div>
+      </div>
+
+      {/* Search and Filter Controls */}
+      <div className="space-y-3 mb-4 p-4 bg-background/50 rounded-sm">
+        {/* Search */}
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-3 text-foreground-muted" />
+          <input
+            type="text"
+            placeholder="Search by name, brand, category..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-background border border-border px-3 py-2 pl-9 text-sm rounded-sm focus:outline-none focus:border-foreground"
+          />
+        </div>
+
+        {/* Sort Controls */}
+        <div className={isMobile ? 'space-y-2' : 'flex gap-2'}>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="flex-1 bg-background border border-border px-3 py-2 text-sm rounded-sm focus:outline-none focus:border-foreground"
+          >
+            <option value="date">Sort by Date</option>
+            <option value="name">Sort by Name</option>
+            <option value="price">Sort by Price</option>
+          </select>
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as any)}
+            className="flex-1 bg-background border border-border px-3 py-2 text-sm rounded-sm focus:outline-none focus:border-foreground"
+          >
+            <option value="desc">Newest First</option>
+            <option value="asc">Oldest First</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Filter Buttons */}
+      <div className="flex gap-1 flex-wrap mb-4">
         <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="btn-secondary flex items-center gap-2"
+          onClick={() => setFilterAvailable(undefined)}
+          className={`px-2 sm:px-4 py-2 rounded-sm text-xs sm:text-sm uppercase tracking-luxury transition-all ${
+            filterAvailable === undefined
+              ? 'bg-foreground text-background'
+              : 'bg-card border border-border hover:border-foreground'
+          }`}
         >
-          <Plus size={18} />
-          Add Part
+          All
+        </button>
+        <button
+          onClick={() => setFilterAvailable(true)}
+          className={`px-2 sm:px-4 py-2 rounded-sm text-xs sm:text-sm uppercase tracking-luxury transition-all ${
+            filterAvailable === true
+              ? 'bg-foreground text-background'
+              : 'bg-card border border-border hover:border-foreground'
+          }`}
+        >
+          Available
+        </button>
+        <button
+          onClick={() => setFilterAvailable(false)}
+          className={`px-2 sm:px-4 py-2 rounded-sm text-xs sm:text-sm uppercase tracking-luxury transition-all ${
+            filterAvailable === false
+              ? 'bg-foreground text-background'
+              : 'bg-card border border-border hover:border-foreground'
+          }`}
+        >
+          Sold
         </button>
       </div>
 
@@ -253,7 +375,12 @@ const AdminParts = () => {
 
       {/* Parts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {parts.map((part, index) => (
+        {filteredParts.length === 0 ? (
+          <div className="col-span-full text-center py-12 text-foreground-muted">
+            No parts found
+          </div>
+        ) : (
+          filteredParts.map((part, index) => (
           <motion.div
             key={part.id}
             initial={{ opacity: 0, y: 20 }}
@@ -421,7 +548,8 @@ const AdminParts = () => {
               </>
             )}
           </motion.div>
-        ))}
+        ))
+        )}
       </div>
 
       {parts.length === 0 && (

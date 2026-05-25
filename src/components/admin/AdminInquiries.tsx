@@ -1,14 +1,23 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Trash2, Eye, Check, ChevronLeft } from 'lucide-react'
+import { Trash2, Eye, Check, ChevronLeft, Download, Search } from 'lucide-react'
 import { inquiryService, Inquiry } from '../../lib/supabase'
+import {
+  filterInquiries,
+  exportInquiries,
+  getInquiryStats,
+} from '../../lib/adminUtils'
 
 const AdminInquiries = () => {
   const [inquiries, setInquiries] = useState<Inquiry[]>([])
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null)
   const [filter, setFilter] = useState<'all' | 'new' | 'read' | 'responded'>('all')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortBy, setSortBy] = useState<'date' | 'name' | 'price'>('date')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [loading, setLoading] = useState(true)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [stats, setStats] = useState({ total: 0, new: 0, read: 0, responded: 0 })
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768)
@@ -43,6 +52,7 @@ const AdminInquiries = () => {
     try {
       const data = await inquiryService.getAll()
       setInquiries(data)
+      setStats(getInquiryStats(data))
     } catch (error) {
       console.error('Error loading inquiries:', error)
     } finally {
@@ -78,9 +88,11 @@ const AdminInquiries = () => {
     }
   }
 
-  const filteredInquiries = inquiries.filter(inq => {
-    if (filter === 'all') return true
-    return inq.status === filter
+  const filteredInquiries = filterInquiries(inquiries, {
+    searchTerm,
+    status: filter === 'all' ? undefined : filter,
+    sortBy,
+    sortOrder,
   })
 
   const getStatusColor = (status: string) => {
@@ -198,21 +210,86 @@ const AdminInquiries = () => {
       <div className={isMobile ? 'space-y-4' : 'lg:col-span-2 space-y-4'}>
         <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
           <h2 className="heading-section">Inquiries</h2>
-          <div className={isMobile ? 'flex gap-1 flex-wrap' : 'flex gap-2'}>
-            {(['all', 'new', 'read', 'responded'] as const).map(status => (
-              <button
-                key={status}
-                onClick={() => setFilter(status)}
-                className={`px-2 sm:px-4 py-2 rounded-sm text-xs sm:text-sm uppercase tracking-luxury transition-all ${
-                  filter === status
-                    ? 'bg-foreground text-background'
-                    : 'bg-card border border-border hover:border-foreground'
-                }`}
-              >
-                {status === 'all' ? 'All' : status}
-              </button>
-            ))}
+          <button
+            onClick={() => exportInquiries(filteredInquiries)}
+            className="flex items-center gap-2 px-3 py-2 bg-green-500/20 text-green-400 rounded-sm hover:bg-green-500/30 text-sm"
+            title="Export to CSV"
+          >
+            <Download size={16} />
+            <span className="hidden sm:inline">Export</span>
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+          <div className="p-2 bg-background/50 rounded-sm text-center">
+            <p className="text-xs text-foreground-muted">Total</p>
+            <p className="text-lg font-semibold">{stats.total}</p>
           </div>
+          <div className="p-2 bg-motorsport-red/10 rounded-sm text-center">
+            <p className="text-xs text-motorsport-red">New</p>
+            <p className="text-lg font-semibold text-motorsport-red">{stats.new}</p>
+          </div>
+          <div className="p-2 bg-blue-500/10 rounded-sm text-center">
+            <p className="text-xs text-blue-400">Read</p>
+            <p className="text-lg font-semibold text-blue-400">{stats.read}</p>
+          </div>
+          <div className="p-2 bg-green-500/10 rounded-sm text-center">
+            <p className="text-xs text-green-400">Responded</p>
+            <p className="text-lg font-semibold text-green-400">{stats.responded}</p>
+          </div>
+        </div>
+
+        {/* Search and Filter Controls */}
+        <div className="space-y-3 mb-4 p-4 bg-background/50 rounded-sm">
+          {/* Search */}
+          <div className="relative">
+            <Search size={16} className="absolute left-3 top-3 text-foreground-muted" />
+            <input
+              type="text"
+              placeholder="Search by name, email, phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-background border border-border px-3 py-2 pl-9 text-sm rounded-sm focus:outline-none focus:border-foreground"
+            />
+          </div>
+
+          {/* Sort Controls */}
+          <div className={isMobile ? 'space-y-2' : 'flex gap-2'}>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="flex-1 bg-background border border-border px-3 py-2 text-sm rounded-sm focus:outline-none focus:border-foreground"
+            >
+              <option value="date">Sort by Date</option>
+              <option value="name">Sort by Name</option>
+            </select>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as any)}
+              className="flex-1 bg-background border border-border px-3 py-2 text-sm rounded-sm focus:outline-none focus:border-foreground"
+            >
+              <option value="desc">Newest First</option>
+              <option value="asc">Oldest First</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Filter Buttons */}
+        <div className="flex gap-1 flex-wrap mb-4">
+          {(['all', 'new', 'read', 'responded'] as const).map(status => (
+            <button
+              key={status}
+              onClick={() => setFilter(status)}
+              className={`px-2 sm:px-4 py-2 rounded-sm text-xs sm:text-sm uppercase tracking-luxury transition-all ${
+                filter === status
+                  ? 'bg-foreground text-background'
+                  : 'bg-card border border-border hover:border-foreground'
+              }`}
+            >
+              {status === 'all' ? 'All' : status}
+            </button>
+          ))}
         </div>
 
         <div className="space-y-3">
