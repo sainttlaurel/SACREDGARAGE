@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Mail, Phone, MapPin } from 'lucide-react'
 import { useState } from 'react'
+import { inquiryService } from '../lib/supabase'
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -11,38 +12,61 @@ const Contact = () => {
     message: ''
   })
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLoading(true)
+    setError('')
 
-    // Create inquiry object
-    const inquiry = {
-      id: Date.now().toString(),
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      phone: formData.phone,
-      message: formData.message,
-      status: 'new' as const,
-      createdAt: new Date().toISOString()
+    try {
+      // Try to save to Supabase first
+      try {
+        await inquiryService.create({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message,
+          status: 'new'
+        })
+      } catch (supabaseError) {
+        // Fallback to localStorage if Supabase fails
+        console.warn('Supabase error, using localStorage:', supabaseError)
+        const inquiry = {
+          id: Date.now().toString(),
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message,
+          status: 'new' as const,
+          createdAt: new Date().toISOString()
+        }
+
+        const existingInquiries = JSON.parse(localStorage.getItem('inquiries') || '[]')
+        existingInquiries.push(inquiry)
+        localStorage.setItem('inquiries', JSON.stringify(existingInquiries))
+      }
+
+      // Reset form
+      setFormData({ firstName: '', lastName: '', email: '', phone: '', message: '' })
+      setSubmitted(true)
+
+      // Hide success message after 3 seconds
+      setTimeout(() => setSubmitted(false), 3000)
+    } catch (err) {
+      setError('Failed to send inquiry. Please try again.')
+      console.error('Error:', err)
+    } finally {
+      setLoading(false)
     }
-
-    // Save to localStorage
-    const existingInquiries = JSON.parse(localStorage.getItem('inquiries') || '[]')
-    existingInquiries.push(inquiry)
-    localStorage.setItem('inquiries', JSON.stringify(existingInquiries))
-
-    // Reset form
-    setFormData({ firstName: '', lastName: '', email: '', phone: '', message: '' })
-    setSubmitted(true)
-
-    // Hide success message after 3 seconds
-    setTimeout(() => setSubmitted(false), 3000)
   }
 
   return (
@@ -134,6 +158,16 @@ const Contact = () => {
               </motion.div>
             )}
 
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-4 bg-motorsport-red/20 text-motorsport-red rounded-sm text-sm"
+              >
+                ✗ {error}
+              </motion.div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
@@ -144,7 +178,8 @@ const Contact = () => {
                     value={formData.firstName}
                     onChange={handleChange}
                     required
-                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors"
+                    disabled={loading}
+                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
                     placeholder="John"
                   />
                 </div>
@@ -156,7 +191,8 @@ const Contact = () => {
                     value={formData.lastName}
                     onChange={handleChange}
                     required
-                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors"
+                    disabled={loading}
+                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
                     placeholder="Doe"
                   />
                 </div>
@@ -170,7 +206,8 @@ const Contact = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors"
+                  disabled={loading}
+                  className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
                   placeholder="john@example.com"
                 />
               </div>
@@ -183,7 +220,8 @@ const Contact = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors"
+                  disabled={loading}
+                  className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
                   placeholder="+1 (234) 567-890"
                 />
               </div>
@@ -195,19 +233,21 @@ const Contact = () => {
                   value={formData.message}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                   rows={5}
-                  className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors resize-none"
+                  className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors resize-none disabled:opacity-50"
                   placeholder="Tell us about your dream vehicle or the parts you're looking for..."
                 />
               </div>
 
               <motion.button
                 type="submit"
-                className="btn-primary w-full"
+                disabled={loading}
+                className="btn-primary w-full disabled:opacity-50"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                Send Inquiry
+                {loading ? 'Sending...' : 'Send Inquiry'}
               </motion.button>
             </form>
           </motion.div>
