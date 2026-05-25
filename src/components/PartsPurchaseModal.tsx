@@ -3,6 +3,7 @@ import { X, Send } from 'lucide-react'
 import { useState } from 'react'
 import { partOrdersService, Part } from '../lib/supabase'
 import { validatePartOrderForm, ValidationError, getFieldError } from '../lib/validation'
+import { sendNewPartOrderNotification } from '../lib/emailService'
 
 interface PartsPurchaseModalProps {
   isOpen: boolean
@@ -52,7 +53,7 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
     }
 
     try {
-      // Create order
+      // Create order in database
       await partOrdersService.create({
         partId: part.id,
         partName: part.name,
@@ -70,6 +71,24 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
         notes: formData.notes,
         status: 'new'
       })
+
+      // Send email notification to admin
+      const emailSent = await sendNewPartOrderNotification({
+        partName: part.name,
+        partBrand: part.brand,
+        partPrice: part.price,
+        quantity: formData.quantity,
+        customerName: formData.customerName,
+        customerEmail: formData.customerEmail,
+        customerPhone: formData.customerPhone,
+        deliveryOption: formData.deliveryOption
+      })
+
+      if (emailSent) {
+        console.log('✅ Admin notification email sent')
+      } else {
+        console.warn('⚠️ Email notification failed, but order was saved')
+      }
 
       setSubmitted(true)
       setTimeout(() => {

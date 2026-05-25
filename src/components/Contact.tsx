@@ -3,6 +3,7 @@ import { Mail, Phone, MapPin } from 'lucide-react'
 import { useState } from 'react'
 import { inquiryService } from '../lib/supabase'
 import { validateContactForm, ValidationError, getFieldError } from '../lib/validation'
+import { sendNewInquiryNotification } from '../lib/emailService'
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -37,6 +38,7 @@ const Contact = () => {
     }
 
     try {
+      // Save inquiry to database
       await inquiryService.create({
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -45,6 +47,21 @@ const Contact = () => {
         message: formData.message,
         status: 'new'
       })
+
+      // Send email notification to admin
+      const emailSent = await sendNewInquiryNotification({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        message: formData.message
+      })
+
+      if (emailSent) {
+        console.log('✅ Admin notification email sent')
+      } else {
+        console.warn('⚠️ Email notification failed, but inquiry was saved')
+      }
 
       // Reset form
       setFormData({ firstName: '', lastName: '', email: '', phone: '', message: '' })
