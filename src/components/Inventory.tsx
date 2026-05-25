@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import VehicleCard from './VehicleCard'
 import VehicleModal from './VehicleModal'
 
-const vehicles: Array<{
+interface Vehicle {
+  id: string
   image: string
   images: string[]
   brand: string
@@ -13,8 +14,14 @@ const vehicles: Array<{
   location: string
   description: string
   specs: Record<string, string>
-}> = [
+  available: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
+const defaultVehicles: Vehicle[] = [
   {
+    id: '1',
     image: '/image/HONDA CIVIC.jpg',
     images: [
       '/image/HONDA CIVIC.jpg',
@@ -34,9 +41,11 @@ const vehicles: Array<{
       'mileage': '1st Owner',
       'condition': 'Fresh Repaint',
       'registration': 'Until 2026'
-    }
+    },
+    available: true
   },
   {
+    id: '2',
     image: '/image/TOYOTA LC200.jpg',
     images: [
       '/image/TOYOTA LC200.jpg',
@@ -58,9 +67,11 @@ const vehicles: Array<{
       'mileage': '128k kms',
       'engine': '4.5L V8 Turbo Diesel',
       'drivetrain': '4x4 AT'
-    }
+    },
+    available: true
   },
   {
+    id: '3',
     image: '/image/TOYOTA FJ CRUISER.jpg',
     images: [
       '/image/TOYOTA FJ CRUISER.jpg',
@@ -83,9 +94,11 @@ const vehicles: Array<{
       'mileage': '47k kms',
       'suspension': 'OME BP-51',
       'sound': '₱200K Setup'
-    }
+    },
+    available: true
   },
   {
+    id: '4',
     image: '/image/FORD RANGER WILDTRACK.jpg',
     images: [
       '/image/FORD RANGER WILDTRACK.jpg',
@@ -110,22 +123,55 @@ const vehicles: Array<{
       'mileage': '42k kms',
       'engine': '3.2L Turbo Diesel',
       'modifications': 'Full Off-Road Build'
-    }
+    },
+    available: true
   }
 ]
 
 const Inventory = () => {
-  const [selectedVehicle, setSelectedVehicle] = useState<typeof vehicles[0] | null>(null)
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  const handleViewDetails = (vehicle: typeof vehicles[0]) => {
+  useEffect(() => {
+    // Load vehicles from localStorage
+    const savedVehicles = localStorage.getItem('vehicles')
+    if (savedVehicles) {
+      try {
+        setVehicles(JSON.parse(savedVehicles))
+      } catch (error) {
+        console.error('Error loading vehicles:', error)
+        setVehicles(defaultVehicles)
+      }
+    } else {
+      setVehicles(defaultVehicles)
+      localStorage.setItem('vehicles', JSON.stringify(defaultVehicles))
+    }
+    setLoading(false)
+  }, [])
+
+  // Filter to show only available vehicles
+  const availableVehicles = vehicles.filter(v => v.available)
+
+  const handleViewDetails = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle)
     setIsModalOpen(true)
   }
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
-    setTimeout(() => setSelectedVehicle(null), 300) // Wait for animation
+    setTimeout(() => setSelectedVehicle(null), 300)
+  }
+
+  if (loading) {
+    return (
+      <section id="inventory" className="relative py-32 overflow-hidden">
+        <div className="container-luxury relative z-10 text-center">
+          <p className="text-foreground-muted">Loading inventory...</p>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -156,18 +202,31 @@ const Inventory = () => {
             Each vehicle has been carefully selected and verified. From JDM classics to modern off-roaders, 
             all with complete papers and ready for transfer.
           </p>
+          {availableVehicles.length < vehicles.length && (
+            <p className="text-sm text-foreground-faint mt-4">
+              {vehicles.length - availableVehicles.length} vehicle(s) sold
+            </p>
+          )}
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {vehicles.map((vehicle, index) => (
-            <VehicleCard 
-              key={index} 
-              {...vehicle} 
-              index={index}
-              onViewDetails={() => handleViewDetails(vehicle)}
-            />
-          ))}
-        </div>
+        {availableVehicles.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {availableVehicles.map((vehicle, index) => (
+              <VehicleCard 
+                key={vehicle.id} 
+                {...vehicle} 
+                index={index}
+                onViewDetails={() => handleViewDetails(vehicle)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-lg text-foreground-muted">
+              All vehicles are currently sold. Check back soon for new inventory!
+            </p>
+          </div>
+        )}
 
         {/* Trade Notice */}
         <motion.div

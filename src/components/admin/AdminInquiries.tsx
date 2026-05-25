@@ -1,17 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Trash2, Eye, Check } from 'lucide-react'
-
-interface Inquiry {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  message: string
-  status: 'new' | 'read' | 'responded'
-  createdAt: string
-}
+import { inquiryService, Inquiry } from '../../lib/supabase'
 
 const AdminInquiries = () => {
   const [inquiries, setInquiries] = useState<Inquiry[]>([])
@@ -20,34 +10,45 @@ const AdminInquiries = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Load inquiries from localStorage (in production, fetch from backend)
-    const savedInquiries = localStorage.getItem('inquiries')
-    if (savedInquiries) {
-      setInquiries(JSON.parse(savedInquiries))
-    }
-    setLoading(false)
+    loadInquiries()
   }, [])
 
-  const saveInquiries = (updated: Inquiry[]) => {
-    setInquiries(updated)
-    localStorage.setItem('inquiries', JSON.stringify(updated))
-  }
-
-  const updateStatus = (id: string, status: 'new' | 'read' | 'responded') => {
-    const updated = inquiries.map(inq =>
-      inq.id === id ? { ...inq, status } : inq
-    )
-    saveInquiries(updated)
-    if (selectedInquiry?.id === id) {
-      setSelectedInquiry({ ...selectedInquiry, status })
+  const loadInquiries = async () => {
+    try {
+      const data = await inquiryService.getAll()
+      setInquiries(data)
+    } catch (error) {
+      console.error('Error loading inquiries:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const deleteInquiry = (id: string) => {
+  const updateStatus = async (id: string, status: 'new' | 'read' | 'responded') => {
+    try {
+      await inquiryService.update(id, { status })
+      const updated = inquiries.map(inq =>
+        inq.id === id ? { ...inq, status } : inq
+      )
+      setInquiries(updated)
+      if (selectedInquiry?.id === id) {
+        setSelectedInquiry({ ...selectedInquiry, status })
+      }
+    } catch (error) {
+      console.error('Error updating status:', error)
+    }
+  }
+
+  const deleteInquiry = async (id: string) => {
     if (confirm('Are you sure you want to delete this inquiry?')) {
-      const updated = inquiries.filter(inq => inq.id !== id)
-      saveInquiries(updated)
-      setSelectedInquiry(null)
+      try {
+        await inquiryService.delete(id)
+        const updated = inquiries.filter(inq => inq.id !== id)
+        setInquiries(updated)
+        setSelectedInquiry(null)
+      } catch (error) {
+        console.error('Error deleting inquiry:', error)
+      }
     }
   }
 

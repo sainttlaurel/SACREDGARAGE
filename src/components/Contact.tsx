@@ -26,34 +26,14 @@ const Contact = () => {
     setError('')
 
     try {
-      // Try to save to Supabase first
-      try {
-        await inquiryService.create({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          message: formData.message,
-          status: 'new'
-        })
-      } catch (supabaseError) {
-        // Fallback to localStorage if Supabase fails
-        console.warn('Supabase error, using localStorage:', supabaseError)
-        const inquiry = {
-          id: Date.now().toString(),
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          message: formData.message,
-          status: 'new' as const,
-          createdAt: new Date().toISOString()
-        }
-
-        const existingInquiries = JSON.parse(localStorage.getItem('inquiries') || '[]')
-        existingInquiries.push(inquiry)
-        localStorage.setItem('inquiries', JSON.stringify(existingInquiries))
-      }
+      await inquiryService.create({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        message: formData.message,
+        status: 'new'
+      })
 
       // Reset form
       setFormData({ firstName: '', lastName: '', email: '', phone: '', message: '' })
