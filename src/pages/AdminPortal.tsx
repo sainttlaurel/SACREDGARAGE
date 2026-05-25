@@ -6,6 +6,7 @@ import AdminInventory from '../components/admin/AdminInventory'
 import AdminParts from '../components/admin/AdminParts'
 import AdminPartOrders from '../components/admin/AdminPartOrders'
 import AdminSettings from '../components/admin/AdminSettings'
+import Toast from '../components/Toast'
 import { loadFromSupabaseToLocalStorage, syncLocalStorageToSupabase } from '../lib/syncToSupabase'
 
 interface AdminPortalProps {
@@ -18,6 +19,9 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
   const [activeTab, setActiveTab] = useState<'inquiries' | 'inventory' | 'parts' | 'orders' | 'settings'>('inquiries')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState<'success' | 'error'>('success')
+  const [showToast, setShowToast] = useState(false)
 
   useEffect(() => {
     // Check if already authenticated
@@ -51,9 +55,13 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
     try {
       await loadFromSupabaseToLocalStorage()
       await syncLocalStorageToSupabase()
-      alert('✅ Sync complete! Data is now up to date.')
+      setToastMessage('Data synchronized successfully')
+      setToastType('success')
+      setShowToast(true)
     } catch (error) {
-      alert('❌ Sync failed. Check console for details.')
+      setToastMessage('Synchronization failed. Please try again.')
+      setToastType('error')
+      setShowToast(true)
       console.error('Sync error:', error)
     } finally {
       setSyncing(false)
@@ -277,6 +285,14 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
           {activeTab === 'settings' && <AdminSettings />}
         </div>
       </main>
+
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        isOpen={showToast}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   )
 }
