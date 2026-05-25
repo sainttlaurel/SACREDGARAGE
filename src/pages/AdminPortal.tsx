@@ -73,9 +73,10 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
     }
 
     if (!supabase) {
-      setToastMessage('Supabase not available. Please check your configuration.')
+      setToastMessage('Supabase not configured. Check your environment variables (VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY).')
       setToastType('error')
       setShowToast(true)
+      console.error('Supabase client is null. Environment variables may not be loaded.')
       return
     }
 

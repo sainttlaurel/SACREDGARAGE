@@ -4,6 +4,7 @@ import PartCard from './PartCard'
 import PartModal from './PartModal'
 import PartsPurchaseModal from './PartsPurchaseModal'
 import { partsService, Part } from '../lib/supabase'
+import { subscribeToTable, loadInitialData } from '../lib/realtimeSubscriptions'
 
 const defaultParts: Part[] = [
   {
@@ -94,45 +95,27 @@ const Parts = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadParts()
-
-    // Listen for storage changes (real-time sync when admin updates)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'parts' && e.newValue) {
-        try {
-          const updatedParts = JSON.parse(e.newValue)
-          setParts(updatedParts)
-          console.log('✅ Parts updated from admin changes')
-        } catch (error) {
-          console.error('Error parsing updated parts:', error)
-        }
-      }
+    // Load initial data
+    const initializeData = async () => {
+      const data = await loadInitialData('parts')
+      setParts(data.length > 0 ? data : defaultParts)
+      setLoading(false)
     }
 
-    // Poll for changes every 2 seconds (backup for same-tab updates)
-    const pollInterval = setInterval(() => {
-      const savedParts = localStorage.getItem('parts')
-      if (savedParts) {
-        try {
-          const parsedParts = JSON.parse(savedParts)
-          // Only update if data actually changed
-          if (JSON.stringify(parsedParts) !== JSON.stringify(parts)) {
-            setParts(parsedParts)
-            console.log('✅ Parts synced via polling')
-          }
-        } catch (error) {
-          console.error('Error polling parts:', error)
-        }
-      }
-    }, 2000)
+    initializeData()
 
-    window.addEventListener('storage', handleStorageChange)
+    // Subscribe to real-time changes
+    const subscription = subscribeToTable('parts', (updatedParts) => {
+      setParts(updatedParts.length > 0 ? updatedParts : defaultParts)
+    })
 
+    // Cleanup subscription on unmount
     return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      clearInterval(pollInterval)
+      if (subscription) {
+        subscription.unsubscribe()
+      }
     }
-  }, [parts])
+  }, [])
 
   const loadParts = async () => {
     try {

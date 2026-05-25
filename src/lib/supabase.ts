@@ -8,18 +8,24 @@ let supabase: any = null
 let supabaseError: Error | null = null
 let isSupabaseAvailable = false
 
+// Debug logging
+console.log('Supabase URL available:', !!supabaseUrl)
+console.log('Supabase Key available:', !!supabaseKey)
+
 try {
   if (!supabaseUrl || !supabaseKey) {
-    console.warn('Supabase environment variables not set. Using localStorage fallback.')
+    console.warn('⚠️ Supabase environment variables not set. Using localStorage fallback.')
+    console.warn('VITE_SUPABASE_URL:', supabaseUrl ? 'SET' : 'NOT SET')
+    console.warn('VITE_SUPABASE_PUBLISHABLE_KEY:', supabaseKey ? 'SET' : 'NOT SET')
     supabaseError = new Error('Missing Supabase environment variables')
   } else {
     supabase = createClient(supabaseUrl, supabaseKey)
     isSupabaseAvailable = true
-    console.log('Supabase initialized successfully')
+    console.log('✅ Supabase initialized successfully')
   }
 } catch (error) {
   supabaseError = error as Error
-  console.error('Supabase initialization error:', supabaseError)
+  console.error('❌ Supabase initialization error:', supabaseError)
   isSupabaseAvailable = false
 }
 

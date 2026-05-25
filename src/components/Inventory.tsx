@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import VehicleCard from './VehicleCard'
 import VehicleModal from './VehicleModal'
+import { subscribeToTable, loadInitialData } from '../lib/realtimeSubscriptions'
 
 interface Vehicle {
   id: string
@@ -135,63 +136,27 @@ const Inventory = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Initial load
-    loadVehicles()
-
-    // Listen for storage changes (real-time sync when admin updates)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'vehicles' && e.newValue) {
-        try {
-          const updatedVehicles = JSON.parse(e.newValue)
-          setVehicles(updatedVehicles)
-          console.log('✅ Vehicles updated from admin changes')
-        } catch (error) {
-          console.error('Error parsing updated vehicles:', error)
-        }
-      }
+    // Load initial data
+    const initializeData = async () => {
+      const data = await loadInitialData('vehicles')
+      setVehicles(data.length > 0 ? data : defaultVehicles)
+      setLoading(false)
     }
 
-    // Poll for changes every 2 seconds (backup for same-tab updates)
-    const pollInterval = setInterval(() => {
-      const savedVehicles = localStorage.getItem('vehicles')
-      if (savedVehicles) {
-        try {
-          const parsedVehicles = JSON.parse(savedVehicles)
-          // Only update if data actually changed
-          if (JSON.stringify(parsedVehicles) !== JSON.stringify(vehicles)) {
-            setVehicles(parsedVehicles)
-            console.log('✅ Vehicles synced via polling')
-          }
-        } catch (error) {
-          console.error('Error polling vehicles:', error)
-        }
-      }
-    }, 2000)
+    initializeData()
 
-    window.addEventListener('storage', handleStorageChange)
+    // Subscribe to real-time changes
+    const subscription = subscribeToTable('vehicles', (updatedVehicles) => {
+      setVehicles(updatedVehicles.length > 0 ? updatedVehicles : defaultVehicles)
+    })
 
+    // Cleanup subscription on unmount
     return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      clearInterval(pollInterval)
-    }
-  }, [vehicles])
-
-  const loadVehicles = () => {
-    // Load vehicles from localStorage
-    const savedVehicles = localStorage.getItem('vehicles')
-    if (savedVehicles) {
-      try {
-        setVehicles(JSON.parse(savedVehicles))
-      } catch (error) {
-        console.error('Error loading vehicles:', error)
-        setVehicles(defaultVehicles)
+      if (subscription) {
+        subscription.unsubscribe()
       }
-    } else {
-      setVehicles(defaultVehicles)
-      localStorage.setItem('vehicles', JSON.stringify(defaultVehicles))
     }
-    setLoading(false)
-  }
+  }, [])
 
   // Filter to show only available vehicles
   const availableVehicles = vehicles.filter(v => v.available)

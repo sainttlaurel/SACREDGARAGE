@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { Mail, Phone, MapPin } from 'lucide-react'
 import { useState } from 'react'
 import { inquiryService } from '../lib/supabase'
+import { validateContactForm, ValidationError, getFieldError } from '../lib/validation'
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -13,17 +14,27 @@ const Contact = () => {
   })
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [errors, setErrors] = useState<ValidationError[]>([])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    // Clear error for this field when user starts typing
+    setErrors(prev => prev.filter(err => err.field !== name))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setError('')
+    setErrors([])
+
+    // Validate form
+    const validationErrors = validateContactForm(formData)
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors)
+      setLoading(false)
+      return
+    }
 
     try {
       await inquiryService.create({
@@ -42,7 +53,7 @@ const Contact = () => {
       // Hide success message after 3 seconds
       setTimeout(() => setSubmitted(false), 3000)
     } catch (err) {
-      setError('Failed to send inquiry. Please try again.')
+      setErrors([{ field: 'submit', message: 'Failed to send inquiry. Please try again.' }])
       console.error('Error:', err)
     } finally {
       setLoading(false)
@@ -138,20 +149,22 @@ const Contact = () => {
               </motion.div>
             )}
 
-            {error && (
+            {errors.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-motorsport-red/20 text-motorsport-red rounded-sm text-sm"
+                className="mb-6 p-4 bg-motorsport-red/20 text-motorsport-red rounded-sm text-sm space-y-2"
               >
-                ✗ {error}
+                {errors.map((error, idx) => (
+                  <div key={idx}>✗ {error.message}</div>
+                ))}
               </motion.div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="label-small block mb-3">First Name</label>
+                  <label className="label-small block mb-3">First Name *</label>
                   <input
                     type="text"
                     name="firstName"
@@ -159,12 +172,17 @@ const Contact = () => {
                     onChange={handleChange}
                     required
                     disabled={loading}
-                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                    className={`w-full bg-background border px-4 py-3 focus:outline-none transition-colors disabled:opacity-50 ${
+                      getFieldError(errors, 'firstName') ? 'border-motorsport-red' : 'border-border focus:border-foreground'
+                    }`}
                     placeholder="John"
                   />
+                  {getFieldError(errors, 'firstName') && (
+                    <p className="text-motorsport-red text-xs mt-1">{getFieldError(errors, 'firstName')}</p>
+                  )}
                 </div>
                 <div>
-                  <label className="label-small block mb-3">Last Name</label>
+                  <label className="label-small block mb-3">Last Name *</label>
                   <input
                     type="text"
                     name="lastName"
@@ -172,14 +190,19 @@ const Contact = () => {
                     onChange={handleChange}
                     required
                     disabled={loading}
-                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                    className={`w-full bg-background border px-4 py-3 focus:outline-none transition-colors disabled:opacity-50 ${
+                      getFieldError(errors, 'lastName') ? 'border-motorsport-red' : 'border-border focus:border-foreground'
+                    }`}
                     placeholder="Doe"
                   />
+                  {getFieldError(errors, 'lastName') && (
+                    <p className="text-motorsport-red text-xs mt-1">{getFieldError(errors, 'lastName')}</p>
+                  )}
                 </div>
               </div>
 
               <div>
-                <label className="label-small block mb-3">Email</label>
+                <label className="label-small block mb-3">Email *</label>
                 <input
                   type="email"
                   name="email"
@@ -187,13 +210,18 @@ const Contact = () => {
                   onChange={handleChange}
                   required
                   disabled={loading}
-                  className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                  className={`w-full bg-background border px-4 py-3 focus:outline-none transition-colors disabled:opacity-50 ${
+                    getFieldError(errors, 'email') ? 'border-motorsport-red' : 'border-border focus:border-foreground'
+                  }`}
                   placeholder="john@example.com"
                 />
+                {getFieldError(errors, 'email') && (
+                  <p className="text-motorsport-red text-xs mt-1">{getFieldError(errors, 'email')}</p>
+                )}
               </div>
 
               <div>
-                <label className="label-small block mb-3">Phone</label>
+                <label className="label-small block mb-3">Phone *</label>
                 <input
                   type="tel"
                   name="phone"
@@ -201,13 +229,18 @@ const Contact = () => {
                   onChange={handleChange}
                   required
                   disabled={loading}
-                  className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                  className={`w-full bg-background border px-4 py-3 focus:outline-none transition-colors disabled:opacity-50 ${
+                    getFieldError(errors, 'phone') ? 'border-motorsport-red' : 'border-border focus:border-foreground'
+                  }`}
                   placeholder="+1 (234) 567-890"
                 />
+                {getFieldError(errors, 'phone') && (
+                  <p className="text-motorsport-red text-xs mt-1">{getFieldError(errors, 'phone')}</p>
+                )}
               </div>
 
               <div>
-                <label className="label-small block mb-3">Message</label>
+                <label className="label-small block mb-3">Message *</label>
                 <textarea
                   name="message"
                   value={formData.message}
@@ -215,9 +248,14 @@ const Contact = () => {
                   required
                   disabled={loading}
                   rows={5}
-                  className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors resize-none disabled:opacity-50"
+                  className={`w-full bg-background border px-4 py-3 focus:outline-none transition-colors resize-none disabled:opacity-50 ${
+                    getFieldError(errors, 'message') ? 'border-motorsport-red' : 'border-border focus:border-foreground'
+                  }`}
                   placeholder="Tell us about your dream vehicle or the parts you're looking for..."
                 />
+                {getFieldError(errors, 'message') && (
+                  <p className="text-motorsport-red text-xs mt-1">{getFieldError(errors, 'message')}</p>
+                )}
               </div>
 
               <motion.button

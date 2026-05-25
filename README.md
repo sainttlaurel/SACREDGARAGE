@@ -1,25 +1,25 @@
 # HRVD Car Trading — Premium Luxury Automotive Website
 
-A cinematic, luxury editorial-style website for premium motorsport vehicles, combining Red Bull Racing energy with high-end automotive presentation.
+A cinematic, luxury editorial-style website for premium motorsport vehicles, combining Red Bull Racing-inspired energy with premium automotive presentation.
 
-## 🎨 Design Philosophy
+## Design Philosophy
 
-- **Luxury Monochrome Editorial** — Pure black backgrounds with white typography
-- **Cinematic Automotive Photography** — Full-width immersive imagery
-- **Motorsport-Inspired Identity** — Red Bull Racing energy meets premium dealership
-- **Premium UI/UX** — Minimal chrome, maximum impact
+- Luxury monochrome editorial aesthetic
+- Cinematic automotive photography
+- Motorsport-inspired identity
+- Minimal and premium UI/UX experience
 
-## 🚀 Tech Stack
+## Tech Stack
 
-- **React 18** — Modern UI library
-- **Vite** — Lightning-fast build tool
-- **TypeScript** — Type-safe development
-- **Tailwind CSS** — Utility-first styling
-- **Framer Motion** — Advanced animations
-- **Lucide React** — Premium iconography
-- **Supabase** — Backend integration ready
+- React 18
+- Vite
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+- Lucide React
+- Supabase
 
-## 📦 Installation
+## Installation
 
 ```bash
 # Install dependencies
@@ -35,112 +35,118 @@ npm run build
 npm run preview
 ```
 
-## 🎯 Features
+## Features
 
-- 🎬 Cinematic video loading screen with logo
-- ✨ Smooth entrance animations
-- 🏎️ Premium vehicle inventory showcase
-- 🔧 Performance parts marketplace
-- 🎥 Showreel section with social media integration
-- 📱 Fully responsive mobile-first design
-- 🎭 Film grain texture overlay
-- 🌊 Smooth scroll-triggered animations
-- 💎 Luxury editorial typography system
-- 🎨 Monochrome + motorsport color palette
-- 🖼️ Logo integration in header and footer
+- Cinematic video loading screen
+- Smooth motion animations
+- Premium vehicle showcase
+- Performance parts marketplace
+- Responsive mobile-first design
+- Scroll-triggered transitions
+- Editorial typography system
+- Motorsport-inspired monochrome theme
+- Social media and showreel integration
 
-## 🎨 Design System
+## Design System
 
 ### Colors
+
 - Pure black backgrounds (`#000000`)
 - White typography (`#FFFFFF`)
 - Motorsport red accent (`#c1121f`)
 - Metallic highlights (`#c0c0c0`)
 
 ### Typography
-- **Display:** Instrument Serif — Elegant editorial headings
-- **Body/UI:** Inter — Clean modern interface
+
+- Instrument Serif — Editorial display headings
+- Inter — Modern interface typography
 
 ### Layout
+
 - Max width: `1120px`
-- Consistent padding: `px-6 lg:px-8`
-- Premium white space throughout
+- Consistent spacing system
+- Minimal luxury composition
 
-## 📁 Project Structure
+## Project Structure
 
-```
+```plaintext
 src/
 ├── components/
-│   ├── LoadingScreen.tsx # Video loading screen
-│   ├── Navbar.tsx       # Fixed navigation with logo
-│   ├── Hero.tsx         # Cinematic hero section
-│   ├── Features.tsx     # Why choose HRVD
-│   ├── Inventory.tsx    # Vehicle showcase
-│   ├── VehicleCard.tsx  # Individual vehicle cards
-│   ├── Parts.tsx        # Performance parts section
-│   ├── PartCard.tsx     # Individual part cards
-│   ├── Showreel.tsx     # Video/social media section
-│   ├── CTA.tsx          # Call-to-action section
-│   ├── Contact.tsx      # Contact form & info
-│   └── Footer.tsx       # Site footer with logo
-├── App.tsx              # Main app component
-├── main.tsx             # App entry point
-└── index.css            # Global styles & design system
+│   ├── LoadingScreen.tsx
+│   ├── Navbar.tsx
+│   ├── Hero.tsx
+│   ├── Features.tsx
+│   ├── Inventory.tsx
+│   ├── VehicleCard.tsx
+│   ├── Parts.tsx
+│   ├── PartCard.tsx
+│   ├── Showreel.tsx
+│   ├── CTA.tsx
+│   ├── Contact.tsx
+│   └── Footer.tsx
+├── App.tsx
+├── main.tsx
+└── index.css
 ```
 
-## 🎬 Animation System
+## Animation System
 
-All animations use Framer Motion with:
-- Elegant slow easing curves
+Built with Framer Motion featuring:
+
+- Smooth easing transitions
 - Scroll-triggered reveals
-- Stagger effects for lists
-- Smooth hover transitions
-- Cinematic entrance animations
+- Stagger animations
+- Hover interactions
+- Cinematic entrance effects
 
-## 📱 Responsive Design
+## Responsive Design
 
-- **Mobile:** Single-column, fullscreen menu, touch-optimized
-- **Tablet:** Adaptive grid layouts
-- **Desktop:** Multi-column editorial layouts, spacious composition
+- Mobile-first optimized layout
+- Adaptive tablet grids
+- Spacious desktop editorial layouts
 
-## 🔧 Customization
+## Customization
 
-### Update Vehicle Inventory
-Edit `src/components/Inventory.tsx` to add/modify vehicles in the `vehicles` array.
+### Vehicle Inventory
 
-### Update Parts Inventory
-Edit `src/components/Parts.tsx` to add/modify parts in the `parts` array.
-See `PARTS_INVENTORY.md` for detailed instructions.
+Edit `src/components/Inventory.tsx` to update the vehicle showcase.
 
-### Customize Loading Screen
-Edit `src/components/LoadingScreen.tsx` to change timing or behavior.
-See `LOADING_SCREEN.md` for detailed instructions.
+### Parts Inventory
 
-### Change Colors
+Edit `src/components/Parts.tsx` to modify the parts collection.
+
+### Loading Screen
+
+Edit `src/components/LoadingScreen.tsx` to customize loading behavior.
+
+### Theme Colors
+
 Modify color variables in `tailwind.config.js` and `src/index.css`.
 
-### Add Sections
-Create new components in `src/components/` and import them in `App.tsx`.
+### Add New Sections
 
-## 🌐 Deployment
+Create additional components inside `src/components/` and import them into `App.tsx`.
 
-### Vercel (Recommended)
+## Deployment
+
+### Vercel
+
 ```bash
 npm run build
-# Deploy dist folder to Vercel
 ```
 
-### Other Platforms
-Build the project and deploy the `dist` folder to any static hosting service.
+Deploy the generated `dist` folder to Vercel or any static hosting platform.
 
-## 📄 License
+## License
 
 © 2024 HRVD Car Trading. All rights reserved.
 
-## 🤝 Support
+## Support
 
-For questions or support, contact: info@hrvd.com
+For inquiries or support:
+
+`miguelpilapil30@gmail.com`
 
 ---
 
-**Built with precision. Designed for performance.**
+Built with precision. Designed for performance.

@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Send } from 'lucide-react'
 import { useState } from 'react'
 import { partOrdersService, Part } from '../lib/supabase'
+import { validatePartOrderForm, ValidationError, getFieldError } from '../lib/validation'
 
 interface PartsPurchaseModalProps {
   isOpen: boolean
@@ -25,7 +26,7 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
   })
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [error, setError] = useState('')
+  const [errors, setErrors] = useState<ValidationError[]>([])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -33,21 +34,24 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
       ...prev,
       [name]: name === 'quantity' ? parseInt(value) : value
     }))
+    // Clear error for this field when user starts typing
+    setErrors(prev => prev.filter(err => err.field !== name))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setError('')
+    setErrors([])
+
+    // Validate form
+    const validationErrors = validatePartOrderForm(formData)
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors)
+      setLoading(false)
+      return
+    }
 
     try {
-      // Validate required fields
-      if (!formData.customerName || !formData.customerEmail || !formData.customerPhone || !formData.address) {
-        setError('Please fill in all required fields')
-        setLoading(false)
-        return
-      }
-
       // Create order
       await partOrdersService.create({
         partId: part.id,
@@ -85,7 +89,7 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
         })
       }, 2000)
     } catch (err) {
-      setError('Failed to submit order. Please try again.')
+      setErrors([{ field: 'submit', message: 'Failed to submit order. Please try again.' }])
       console.error('Error:', err)
     } finally {
       setLoading(false)
@@ -146,13 +150,15 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
             </motion.div>
           )}
 
-          {error && (
+          {errors.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 bg-motorsport-red/20 text-motorsport-red rounded-sm text-sm"
+              className="p-4 bg-motorsport-red/20 text-motorsport-red rounded-sm text-sm space-y-2"
             >
-              ✗ {error}
+              {errors.map((error, idx) => (
+                <div key={idx}>✗ {error.message}</div>
+              ))}
             </motion.div>
           )}
 
@@ -166,11 +172,16 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
                 value={formData.quantity}
                 onChange={handleChange}
                 min="1"
-                max="10"
+                max="100"
                 required
                 disabled={loading}
-                className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                className={`w-full bg-background border px-4 py-3 focus:outline-none transition-colors disabled:opacity-50 ${
+                  getFieldError(errors, 'quantity') ? 'border-motorsport-red' : 'border-border focus:border-foreground'
+                }`}
               />
+              {getFieldError(errors, 'quantity') && (
+                <p className="text-motorsport-red text-xs mt-1">{getFieldError(errors, 'quantity')}</p>
+              )}
             </div>
 
             {/* Customer Info */}
@@ -187,9 +198,14 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
                     onChange={handleChange}
                     required
                     disabled={loading}
-                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                    className={`w-full bg-background border px-4 py-3 focus:outline-none transition-colors disabled:opacity-50 ${
+                      getFieldError(errors, 'customerName') ? 'border-motorsport-red' : 'border-border focus:border-foreground'
+                    }`}
                     placeholder="John Doe"
                   />
+                  {getFieldError(errors, 'customerName') && (
+                    <p className="text-motorsport-red text-xs mt-1">{getFieldError(errors, 'customerName')}</p>
+                  )}
                 </div>
                 <div>
                   <label className="label-small block mb-3">Email *</label>
@@ -200,9 +216,14 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
                     onChange={handleChange}
                     required
                     disabled={loading}
-                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                    className={`w-full bg-background border px-4 py-3 focus:outline-none transition-colors disabled:opacity-50 ${
+                      getFieldError(errors, 'customerEmail') ? 'border-motorsport-red' : 'border-border focus:border-foreground'
+                    }`}
                     placeholder="john@example.com"
                   />
+                  {getFieldError(errors, 'customerEmail') && (
+                    <p className="text-motorsport-red text-xs mt-1">{getFieldError(errors, 'customerEmail')}</p>
+                  )}
                 </div>
               </div>
 
@@ -216,9 +237,14 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
                     onChange={handleChange}
                     required
                     disabled={loading}
-                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                    className={`w-full bg-background border px-4 py-3 focus:outline-none transition-colors disabled:opacity-50 ${
+                      getFieldError(errors, 'customerPhone') ? 'border-motorsport-red' : 'border-border focus:border-foreground'
+                    }`}
                     placeholder="+63 912 345 6789"
                   />
+                  {getFieldError(errors, 'customerPhone') && (
+                    <p className="text-motorsport-red text-xs mt-1">{getFieldError(errors, 'customerPhone')}</p>
+                  )}
                 </div>
                 <div>
                   <label className="label-small block mb-3">Facebook Profile (Optional)</label>
@@ -228,9 +254,14 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
                     value={formData.facebookProfile}
                     onChange={handleChange}
                     disabled={loading}
-                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                    className={`w-full bg-background border px-4 py-3 focus:outline-none transition-colors disabled:opacity-50 ${
+                      getFieldError(errors, 'facebookProfile') ? 'border-motorsport-red' : 'border-border focus:border-foreground'
+                    }`}
                     placeholder="facebook.com/yourprofile"
                   />
+                  {getFieldError(errors, 'facebookProfile') && (
+                    <p className="text-motorsport-red text-xs mt-1">{getFieldError(errors, 'facebookProfile')}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -261,9 +292,14 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
                   required
                   disabled={loading}
                   rows={3}
-                  className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors resize-none disabled:opacity-50"
+                  className={`w-full bg-background border px-4 py-3 focus:outline-none transition-colors resize-none disabled:opacity-50 ${
+                    getFieldError(errors, 'address') ? 'border-motorsport-red' : 'border-border focus:border-foreground'
+                  }`}
                   placeholder="Street address, city, postal code"
                 />
+                {getFieldError(errors, 'address') && (
+                  <p className="text-motorsport-red text-xs mt-1">{getFieldError(errors, 'address')}</p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
