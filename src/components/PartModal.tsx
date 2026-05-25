@@ -5,6 +5,7 @@ import ImageZoom from './ImageZoom'
 interface PartModalProps {
   isOpen: boolean
   onClose: () => void
+  onPurchase?: () => void
   part: {
     image: string
     category: string
@@ -16,7 +17,7 @@ interface PartModalProps {
   }
 }
 
-const PartModal = ({ isOpen, onClose, part }: PartModalProps) => {
+const PartModal = ({ isOpen, onClose, part, onPurchase }: PartModalProps) => {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -166,13 +167,15 @@ const PartModal = ({ isOpen, onClose, part }: PartModalProps) => {
                       >
                         Call Now
                       </a>
-                      <a
-                        href="#contact"
-                        onClick={onClose}
+                      <button
+                        onClick={() => {
+                          onClose()
+                          onPurchase?.()
+                        }}
                         className="btn-primary flex-1 text-center"
                       >
-                        Send Inquiry
-                      </a>
+                        Buy Now
+                      </button>
                     </div>
                   </div>
                 </div>

@@ -1,0 +1,327 @@
+import { motion } from 'framer-motion'
+import { X, Send } from 'lucide-react'
+import { useState } from 'react'
+import { partOrdersService, Part } from '../lib/supabase'
+
+interface PartsPurchaseModalProps {
+  isOpen: boolean
+  onClose: () => void
+  part: Part
+}
+
+const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) => {
+  const [formData, setFormData] = useState({
+    quantity: 1,
+    customerName: '',
+    customerEmail: '',
+    customerPhone: '',
+    customerCar: '',
+    address: '',
+    paymentMethod: 'cash',
+    deliveryOption: 'pickup',
+    facebookProfile: '',
+    notes: ''
+  })
+  const [loading, setLoading] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'quantity' ? parseInt(value) : value
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      // Validate required fields
+      if (!formData.customerName || !formData.customerEmail || !formData.customerPhone || !formData.address) {
+        setError('Please fill in all required fields')
+        setLoading(false)
+        return
+      }
+
+      // Create order
+      await partOrdersService.create({
+        partId: part.id,
+        partName: part.name,
+        partBrand: part.brand,
+        partPrice: part.price,
+        quantity: formData.quantity,
+        customerName: formData.customerName,
+        customerEmail: formData.customerEmail,
+        customerPhone: formData.customerPhone,
+        customerCar: formData.customerCar,
+        address: formData.address,
+        paymentMethod: formData.paymentMethod,
+        deliveryOption: formData.deliveryOption,
+        facebookProfile: formData.facebookProfile,
+        notes: formData.notes,
+        status: 'new'
+      })
+
+      setSubmitted(true)
+      setTimeout(() => {
+        onClose()
+        setSubmitted(false)
+        setFormData({
+          quantity: 1,
+          customerName: '',
+          customerEmail: '',
+          customerPhone: '',
+          customerCar: '',
+          address: '',
+          paymentMethod: 'cash',
+          deliveryOption: 'pickup',
+          facebookProfile: '',
+          notes: ''
+        })
+      }, 2000)
+    } catch (err) {
+      setError('Failed to submit order. Please try again.')
+      console.error('Error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-background border border-border rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-background border-b border-border p-6 flex items-center justify-between">
+          <div>
+            <h2 className="font-serif text-2xl">{part.brand} {part.name}</h2>
+            <p className="text-sm text-foreground-muted">{part.price}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-foreground-faint/20 rounded transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {submitted && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 bg-green-500/20 text-green-400 rounded-sm text-sm"
+            >
+              ✓ Order submitted successfully! We'll contact you soon.
+            </motion.div>
+          )}
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 bg-motorsport-red/20 text-motorsport-red rounded-sm text-sm"
+            >
+              ✗ {error}
+            </motion.div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Quantity */}
+            <div>
+              <label className="label-small block mb-3">Quantity *</label>
+              <input
+                type="number"
+                name="quantity"
+                value={formData.quantity}
+                onChange={handleChange}
+                min="1"
+                max="10"
+                required
+                disabled={loading}
+                className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+              />
+            </div>
+
+            {/* Customer Info */}
+            <div className="space-y-4">
+              <h3 className="font-medium text-sm">Customer Information</h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label-small block mb-3">Full Name *</label>
+                  <input
+                    type="text"
+                    name="customerName"
+                    value={formData.customerName}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div>
+                  <label className="label-small block mb-3">Email *</label>
+                  <input
+                    type="email"
+                    name="customerEmail"
+                    value={formData.customerEmail}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                    placeholder="john@example.com"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label-small block mb-3">Phone Number *</label>
+                  <input
+                    type="tel"
+                    name="customerPhone"
+                    value={formData.customerPhone}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                    placeholder="+63 912 345 6789"
+                  />
+                </div>
+                <div>
+                  <label className="label-small block mb-3">Facebook Profile (Optional)</label>
+                  <input
+                    type="text"
+                    name="facebookProfile"
+                    value={formData.facebookProfile}
+                    onChange={handleChange}
+                    disabled={loading}
+                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                    placeholder="facebook.com/yourprofile"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Vehicle & Delivery Info */}
+            <div className="space-y-4">
+              <h3 className="font-medium text-sm">Vehicle & Delivery</h3>
+              
+              <div>
+                <label className="label-small block mb-3">What Car Do You Have? (Optional)</label>
+                <input
+                  type="text"
+                  name="customerCar"
+                  value={formData.customerCar}
+                  onChange={handleChange}
+                  disabled={loading}
+                  className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                  placeholder="e.g., Honda Civic 2020"
+                />
+              </div>
+
+              <div>
+                <label className="label-small block mb-3">Delivery Address *</label>
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  required
+                  disabled={loading}
+                  rows={3}
+                  className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors resize-none disabled:opacity-50"
+                  placeholder="Street address, city, postal code"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label-small block mb-3">Payment Method</label>
+                  <select
+                    name="paymentMethod"
+                    value={formData.paymentMethod}
+                    onChange={handleChange}
+                    disabled={loading}
+                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                  >
+                    <option value="cash">Cash on Delivery</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="gcash">GCash</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label-small block mb-3">Delivery Option</label>
+                  <select
+                    name="deliveryOption"
+                    value={formData.deliveryOption}
+                    onChange={handleChange}
+                    disabled={loading}
+                    className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors disabled:opacity-50"
+                  >
+                    <option value="pickup">Pickup</option>
+                    <option value="delivery">Delivery</option>
+                    <option value="shipping">Shipping</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Notes */}
+            <div>
+              <label className="label-small block mb-3">Additional Notes (Optional)</label>
+              <textarea
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                disabled={loading}
+                rows={3}
+                className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors resize-none disabled:opacity-50"
+                placeholder="Any special requests or questions?"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <motion.button
+              type="submit"
+              disabled={loading}
+              className="w-full btn-primary flex items-center justify-center gap-2 disabled:opacity-50"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Send size={18} />
+              {loading ? 'Submitting...' : 'Submit Order'}
+            </motion.button>
+          </form>
+
+          <p className="text-xs text-foreground-faint text-center">
+            * Required fields. We'll contact you to confirm your order.
+          </p>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+export default PartsPurchaseModal

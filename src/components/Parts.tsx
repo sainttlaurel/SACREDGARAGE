@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import PartCard from './PartCard'
 import PartModal from './PartModal'
+import PartsPurchaseModal from './PartsPurchaseModal'
 import { partsService, Part } from '../lib/supabase'
 
 const defaultParts: Part[] = [
@@ -89,6 +90,7 @@ const Parts = () => {
   const [parts, setParts] = useState<Part[]>([])
   const [selectedPart, setSelectedPart] = useState<Part | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -160,6 +162,11 @@ const Parts = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
+    setTimeout(() => setSelectedPart(null), 300)
+  }
+
+  const handleClosePurchaseModal = () => {
+    setIsPurchaseModalOpen(false)
     setTimeout(() => setSelectedPart(null), 300)
   }
 
@@ -250,6 +257,19 @@ const Parts = () => {
       <PartModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+        part={selectedPart}
+        onPurchase={() => {
+          handleCloseModal()
+          setIsPurchaseModalOpen(true)
+        }}
+      />
+    )}
+
+    {/* Purchase Modal */}
+    {selectedPart && (
+      <PartsPurchaseModal
+        isOpen={isPurchaseModalOpen}
+        onClose={handleClosePurchaseModal}
         part={selectedPart}
       />
     )}

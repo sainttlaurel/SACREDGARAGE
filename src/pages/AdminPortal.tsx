@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { LogOut, Menu, X, Package, MessageSquare, Settings, Wrench } from 'lucide-react'
+import { LogOut, Menu, X, Package, MessageSquare, Settings, Wrench, ShoppingCart } from 'lucide-react'
 import AdminInquiries from '../components/admin/AdminInquiries'
 import AdminInventory from '../components/admin/AdminInventory'
 import AdminParts from '../components/admin/AdminParts'
+import AdminPartOrders from '../components/admin/AdminPartOrders'
 import AdminSettings from '../components/admin/AdminSettings'
 
 interface AdminPortalProps {
@@ -13,7 +14,7 @@ interface AdminPortalProps {
 const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
-  const [activeTab, setActiveTab] = useState<'inquiries' | 'inventory' | 'parts' | 'settings'>('inquiries')
+  const [activeTab, setActiveTab] = useState<'inquiries' | 'inventory' | 'parts' | 'orders' | 'settings'>('inquiries')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -133,6 +134,15 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
               Parts
             </button>
             <button
+              onClick={() => setActiveTab('orders')}
+              className={`flex items-center gap-2 label-small transition-opacity ${
+                activeTab === 'orders' ? 'opacity-100' : 'opacity-60 hover:opacity-100'
+              }`}
+            >
+              <ShoppingCart size={18} />
+              Orders
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`flex items-center gap-2 label-small transition-opacity ${
                 activeTab === 'settings' ? 'opacity-100' : 'opacity-60 hover:opacity-100'
@@ -197,6 +207,15 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
               </button>
               <button
                 onClick={() => {
+                  setActiveTab('orders')
+                  setMobileMenuOpen(false)
+                }}
+                className="block w-full text-left label-small opacity-60 hover:opacity-100"
+              >
+                Orders
+              </button>
+              <button
+                onClick={() => {
                   setActiveTab('settings')
                   setMobileMenuOpen(false)
                 }}
@@ -221,6 +240,7 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
           {activeTab === 'inquiries' && <AdminInquiries />}
           {activeTab === 'inventory' && <AdminInventory />}
           {activeTab === 'parts' && <AdminParts />}
+          {activeTab === 'orders' && <AdminPartOrders />}
           {activeTab === 'settings' && <AdminSettings />}
         </div>
       </main>
