@@ -135,6 +135,48 @@ const Inventory = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Initial load
+    loadVehicles()
+
+    // Listen for storage changes (real-time sync when admin updates)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'vehicles' && e.newValue) {
+        try {
+          const updatedVehicles = JSON.parse(e.newValue)
+          setVehicles(updatedVehicles)
+          console.log('✅ Vehicles updated from admin changes')
+        } catch (error) {
+          console.error('Error parsing updated vehicles:', error)
+        }
+      }
+    }
+
+    // Poll for changes every 2 seconds (backup for same-tab updates)
+    const pollInterval = setInterval(() => {
+      const savedVehicles = localStorage.getItem('vehicles')
+      if (savedVehicles) {
+        try {
+          const parsedVehicles = JSON.parse(savedVehicles)
+          // Only update if data actually changed
+          if (JSON.stringify(parsedVehicles) !== JSON.stringify(vehicles)) {
+            setVehicles(parsedVehicles)
+            console.log('✅ Vehicles synced via polling')
+          }
+        } catch (error) {
+          console.error('Error polling vehicles:', error)
+        }
+      }
+    }, 2000)
+
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(pollInterval)
+    }
+  }, [vehicles])
+
+  const loadVehicles = () => {
     // Load vehicles from localStorage
     const savedVehicles = localStorage.getItem('vehicles')
     if (savedVehicles) {
@@ -149,7 +191,7 @@ const Inventory = () => {
       localStorage.setItem('vehicles', JSON.stringify(defaultVehicles))
     }
     setLoading(false)
-  }, [])
+  }
 
   // Filter to show only available vehicles
   const availableVehicles = vehicles.filter(v => v.available)

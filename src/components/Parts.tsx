@@ -93,7 +93,44 @@ const Parts = () => {
 
   useEffect(() => {
     loadParts()
-  }, [])
+
+    // Listen for storage changes (real-time sync when admin updates)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'parts' && e.newValue) {
+        try {
+          const updatedParts = JSON.parse(e.newValue)
+          setParts(updatedParts)
+          console.log('✅ Parts updated from admin changes')
+        } catch (error) {
+          console.error('Error parsing updated parts:', error)
+        }
+      }
+    }
+
+    // Poll for changes every 2 seconds (backup for same-tab updates)
+    const pollInterval = setInterval(() => {
+      const savedParts = localStorage.getItem('parts')
+      if (savedParts) {
+        try {
+          const parsedParts = JSON.parse(savedParts)
+          // Only update if data actually changed
+          if (JSON.stringify(parsedParts) !== JSON.stringify(parts)) {
+            setParts(parsedParts)
+            console.log('✅ Parts synced via polling')
+          }
+        } catch (error) {
+          console.error('Error polling parts:', error)
+        }
+      }
+    }, 2000)
+
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(pollInterval)
+    }
+  }, [parts])
 
   const loadParts = async () => {
     try {
