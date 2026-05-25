@@ -162,7 +162,7 @@ const Parts = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
-    setTimeout(() => setSelectedPart(null), 300)
+    // Don't clear selectedPart here - it might be needed for purchase modal
   }
 
   const handleClosePurchaseModal = () => {
@@ -259,7 +259,6 @@ const Parts = () => {
         onClose={handleCloseModal}
         part={selectedPart}
         onPurchase={() => {
-          handleCloseModal()
           setIsPurchaseModalOpen(true)
         }}
       />

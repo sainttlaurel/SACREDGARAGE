@@ -168,8 +168,8 @@ const PartModal = ({ isOpen, onClose, part, onPurchase }: PartModalProps) => {
                         Call Now
                       </a>
                       <button
-                        onClick={() => {
-                          onClose()
+                        onClick={(e) => {
+                          e.preventDefault()
                           onPurchase?.()
                         }}
                         className="btn-primary flex-1 text-center"
