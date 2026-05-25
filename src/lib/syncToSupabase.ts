@@ -177,7 +177,7 @@ export const loadFromSupabaseToLocalStorage = async () => {
       const { data: inquiries, error } = await supabase
         .from('inquiries')
         .select('*')
-        .order('createdAt', { ascending: false })
+        .order('created_at', { ascending: false })
       
       if (error) {
         console.error('❌ Error loading inquiries from Supabase:', error)
@@ -196,7 +196,7 @@ export const loadFromSupabaseToLocalStorage = async () => {
       const { data: vehicles, error } = await supabase
         .from('vehicles')
         .select('*')
-        .order('createdAt', { ascending: false })
+        .order('created_at', { ascending: false })
       
       if (error) {
         console.error('❌ Error loading vehicles from Supabase:', error)
@@ -213,7 +213,7 @@ export const loadFromSupabaseToLocalStorage = async () => {
       const { data: parts, error } = await supabase
         .from('parts')
         .select('*')
-        .order('createdAt', { ascending: false })
+        .order('created_at', { ascending: false })
       
       if (error) {
         console.error('❌ Error loading parts from Supabase:', error)
@@ -230,7 +230,7 @@ export const loadFromSupabaseToLocalStorage = async () => {
       const { data: partOrders, error } = await supabase
         .from('part_orders')
         .select('*')
-        .order('createdAt', { ascending: false })
+        .order('created_at', { ascending: false })
       
       if (error) {
         console.error('❌ Error loading part orders from Supabase:', error)
@@ -247,7 +247,7 @@ export const loadFromSupabaseToLocalStorage = async () => {
       const { data: vehicleInquiries, error } = await supabase
         .from('vehicle_inquiries')
         .select('*')
-        .order('createdAt', { ascending: false })
+        .order('created_at', { ascending: false })
       
       if (error) {
         console.error('❌ Error loading vehicle inquiries from Supabase:', error)

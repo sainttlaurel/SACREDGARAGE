@@ -137,7 +137,7 @@ export const inquiryService = {
       const { data, error } = await supabase
         .from('inquiries')
         .select('*')
-        .order('createdAt', { ascending: false })
+        .order('created_at', { ascending: false })
       
       if (error) throw error
       return data as Inquiry[]
@@ -293,7 +293,7 @@ export const vehicleService = {
       const { data, error } = await supabase
         .from('vehicles')
         .select('*')
-        .order('createdAt', { ascending: false })
+        .order('created_at', { ascending: false })
       
       if (error) throw error
       return data as Vehicle[]
@@ -547,7 +547,7 @@ export const partsService = {
       const { data, error } = await supabase
         .from('parts')
         .select('*')
-        .order('createdAt', { ascending: false })
+        .order('created_at', { ascending: false })
       
       if (error) throw error
       return data as Part[]
@@ -701,7 +701,7 @@ export const partOrdersService = {
       const { data, error } = await supabase
         .from('part_orders')
         .select('*')
-        .order('createdAt', { ascending: false })
+        .order('created_at', { ascending: false })
       
       if (error) throw error
       return data as PartOrder[]
@@ -831,7 +831,7 @@ export const vehicleInquiryService = {
       const { data, error } = await supabase
         .from('vehicle_inquiries')
         .select('*')
-        .order('createdAt', { ascending: false })
+        .order('created_at', { ascending: false })
       
       if (error) throw error
       return data as VehicleInquiry[]
