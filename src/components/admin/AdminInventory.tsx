@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Edit2, Trash2, Plus, Save, X, Image as ImageIcon, ChevronUp, ChevronDown } from 'lucide-react'
+import { Edit2, Trash2, Plus, Save, X, Image as ImageIcon, ChevronUp, ChevronDown, Download, GripVertical } from 'lucide-react'
 import { vehicleService, Vehicle } from '../../lib/supabase'
 
 const AdminInventory = () => {
@@ -10,6 +10,7 @@ const AdminInventory = () => {
   const [loading, setLoading] = useState(true)
   const [showPhotoManager, setShowPhotoManager] = useState(false)
   const [newPhotoUrl, setNewPhotoUrl] = useState('')
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
 
   useEffect(() => {
     loadVehicles()
@@ -113,6 +114,53 @@ const AdminInventory = () => {
       const mainPhoto = editForm.images[index]
       const updatedImages = [mainPhoto, ...editForm.images.filter((_, i) => i !== index)]
       setEditForm({ ...editForm, images: updatedImages, image: mainPhoto })
+    }
+  }
+
+  // Download photo function
+  const downloadPhoto = async (photoUrl: string, vehicleName: string, index: number) => {
+    try {
+      const response = await fetch(photoUrl)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${vehicleName}-photo-${index + 1}.jpg`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Error downloading photo:', error)
+      alert('Failed to download photo. Try copying the URL instead.')
+    }
+  }
+
+  // Drag and drop functions
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    ;(e.currentTarget as HTMLElement).style.opacity = '0.5'
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    ;(e.currentTarget as HTMLElement).style.opacity = '1'
+  }
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault()
+    ;(e.currentTarget as HTMLElement).style.opacity = '1'
+
+    if (draggedIndex !== null && draggedIndex !== targetIndex && editForm.images) {
+      const updatedImages = [...editForm.images]
+      const draggedPhoto = updatedImages[draggedIndex]
+      updatedImages.splice(draggedIndex, 1)
+      updatedImages.splice(targetIndex, 0, draggedPhoto)
+      setEditForm({ ...editForm, images: updatedImages })
+      setDraggedIndex(null)
     }
   }
 
@@ -229,26 +277,35 @@ const AdminInventory = () => {
                         </div>
                       </div>
 
-                      {/* Photo List */}
+                      {/* Photo List with Drag and Drop */}
                       <div className="space-y-2">
-                        <label className="label-small block">Photos ({editForm.images?.length || 0})</label>
+                        <label className="label-small block">Photos ({editForm.images?.length || 0}) - Drag to reorder</label>
                         {editForm.images && editForm.images.length > 0 ? (
                           <div className="space-y-2 max-h-64 overflow-y-auto">
                             {editForm.images.map((photo, idx) => (
                               <div
                                 key={idx}
-                                className={`flex items-center gap-2 p-2 rounded-sm border ${
-                                  idx === 0
+                                draggable
+                                onDragStart={() => handleDragStart(idx)}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={(e) => handleDrop(e, idx)}
+                                className={`flex items-center gap-2 p-2 rounded-sm border cursor-move transition-all ${
+                                  draggedIndex === idx
+                                    ? 'opacity-50 border-motorsport-red'
+                                    : idx === 0
                                     ? 'border-motorsport-red/50 bg-motorsport-red/10'
                                     : 'border-border bg-background'
                                 }`}
                               >
+                                <GripVertical size={16} className="text-foreground-muted flex-shrink-0" />
+                                
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs truncate">{photo}</p>
                                   {idx === 0 && <p className="text-xs text-motorsport-red">Main Photo</p>}
                                 </div>
 
-                                <div className="flex gap-1">
+                                <div className="flex gap-1 flex-shrink-0">
                                   {idx > 0 && (
                                     <button
                                       onClick={() => movePhotoUp(idx)}
@@ -277,6 +334,13 @@ const AdminInventory = () => {
                                     </button>
                                   )}
                                   <button
+                                    onClick={() => downloadPhoto(photo, `${editForm.brand}-${editForm.model}`, idx)}
+                                    className="p-1 hover:bg-green-500/20 text-green-400 rounded"
+                                    title="Download photo"
+                                  >
+                                    <Download size={14} />
+                                  </button>
+                                  <button
                                     onClick={() => removePhoto(idx)}
                                     className="p-1 hover:bg-motorsport-red/20 text-motorsport-red rounded"
                                     title="Remove"
@@ -291,6 +355,8 @@ const AdminInventory = () => {
                           <p className="text-xs text-foreground-muted">No photos added yet</p>
                         )}
                       </div>
+
+                      <p className="text-xs text-foreground-faint">💡 Tip: Drag photos to reorder, or use arrow buttons</p>
                     </div>
                   )}
                 </div>
