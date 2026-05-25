@@ -11,7 +11,9 @@ import CTA from './components/CTA'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
 import ThemeToggle from './components/ThemeToggle'
+import ToastContainer from './components/ToastContainer'
 import AdminPortal from './pages/AdminPortal'
+import ErrorBoundary from './components/ErrorBoundary'
 import { loadFromSupabaseToLocalStorage, syncLocalStorageToSupabase } from './lib/syncToSupabase'
 
 function App() {
@@ -49,35 +51,46 @@ function App() {
   }
 
   if (isAdminPage) {
-    return <AdminPortal onNavigateHome={navigateHome} />
+    return (
+      <ErrorBoundary>
+        <>
+          <ToastContainer />
+          <AdminPortal onNavigateHome={navigateHome} />
+        </>
+      </ErrorBoundary>
+    )
   }
 
   return (
-    <>
-      {/* Loading Screen */}
-      {isLoading && <LoadingScreen onLoadingComplete={handleLoadingComplete} />}
-
-      {/* Main Website */}
-      <div className="relative">
-        {/* Grain Texture Overlay */}
-        <div className="grain" />
+    <ErrorBoundary>
+      <>
+        <ToastContainer />
         
-        {/* Main Content */}
-        <Navbar />
-        <Hero />
-        <Features />
-        <Inventory />
-        <Parts />
-        <GalleryWall />
-        <Showreel />
-        <CTA />
-        <Contact />
-        <Footer />
+        {/* Loading Screen */}
+        {isLoading && <LoadingScreen onLoadingComplete={handleLoadingComplete} />}
 
-        {/* Theme Toggle */}
-        <ThemeToggle />
-      </div>
-    </>
+        {/* Main Website */}
+        <div className="relative">
+          {/* Grain Texture Overlay */}
+          <div className="grain" />
+          
+          {/* Main Content */}
+          <Navbar />
+          <Hero />
+          <Features />
+          <Inventory />
+          <Parts />
+          <GalleryWall />
+          <Showreel />
+          <CTA />
+          <Contact />
+          <Footer />
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
+        </div>
+      </>
+    </ErrorBoundary>
   )
 }
 

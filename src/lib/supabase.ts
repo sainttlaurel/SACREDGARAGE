@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { showSuccess } from './notifications'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
@@ -179,6 +180,7 @@ export const inquiryService = {
       const inquiries = saved ? JSON.parse(saved) : []
       inquiries.push(newInquiry)
       localStorage.setItem('inquiries', JSON.stringify(inquiries))
+      showSuccess('Inquiry saved successfully!')
       return newInquiry as Inquiry
     }
     
@@ -190,6 +192,7 @@ export const inquiryService = {
         .single()
       
       if (error) throw error
+      showSuccess('Inquiry saved successfully!')
       return data as Inquiry
     } catch (error) {
       console.warn('Error saving to Supabase, using localStorage:', error)
@@ -197,6 +200,7 @@ export const inquiryService = {
       const inquiries = saved ? JSON.parse(saved) : []
       inquiries.push(newInquiry)
       localStorage.setItem('inquiries', JSON.stringify(inquiries))
+      showSuccess('Inquiry saved successfully!')
       return newInquiry as Inquiry
     }
   },
@@ -331,6 +335,7 @@ export const vehicleService = {
       const vehicles = saved ? JSON.parse(saved) : []
       vehicles.push(newVehicle)
       localStorage.setItem('vehicles', JSON.stringify(vehicles))
+      showSuccess('Vehicle added successfully!')
       return newVehicle as Vehicle
     }
     
@@ -342,6 +347,7 @@ export const vehicleService = {
         .single()
       
       if (error) throw error
+      showSuccess('Vehicle added successfully!')
       return data as Vehicle
     } catch (error) {
       console.warn('Error saving to Supabase, using localStorage:', error)
@@ -349,6 +355,7 @@ export const vehicleService = {
       const vehicles = saved ? JSON.parse(saved) : []
       vehicles.push(newVehicle)
       localStorage.setItem('vehicles', JSON.stringify(vehicles))
+      showSuccess('Vehicle added successfully!')
       return newVehicle as Vehicle
     }
   },
@@ -582,6 +589,7 @@ export const partsService = {
       const parts = saved ? JSON.parse(saved) : []
       parts.push(newPart)
       localStorage.setItem('parts', JSON.stringify(parts))
+      showSuccess('Part added successfully!')
       return newPart as Part
     }
     
@@ -593,6 +601,7 @@ export const partsService = {
         .single()
       
       if (error) throw error
+      showSuccess('Part added successfully!')
       return data as Part
     } catch (error) {
       console.warn('Error saving to Supabase, using localStorage:', error)
@@ -600,6 +609,7 @@ export const partsService = {
       const parts = saved ? JSON.parse(saved) : []
       parts.push(newPart)
       localStorage.setItem('parts', JSON.stringify(parts))
+      showSuccess('Part added successfully!')
       return newPart as Part
     }
   },
@@ -709,6 +719,7 @@ export const partOrdersService = {
       const orders = saved ? JSON.parse(saved) : []
       orders.push(newOrder)
       localStorage.setItem('part_orders', JSON.stringify(orders))
+      showSuccess('Order placed successfully!')
       return newOrder as PartOrder
     }
     
@@ -720,6 +731,7 @@ export const partOrdersService = {
         .single()
       
       if (error) throw error
+      showSuccess('Order placed successfully!')
       return data as PartOrder
     } catch (error) {
       console.warn('Error saving to Supabase, using localStorage:', error)
@@ -727,6 +739,7 @@ export const partOrdersService = {
       const orders = saved ? JSON.parse(saved) : []
       orders.push(newOrder)
       localStorage.setItem('part_orders', JSON.stringify(orders))
+      showSuccess('Order placed successfully!')
       return newOrder as PartOrder
     }
   },
@@ -836,6 +849,7 @@ export const vehicleInquiryService = {
       const inquiries = saved ? JSON.parse(saved) : []
       inquiries.push(newInquiry)
       localStorage.setItem('vehicle_inquiries', JSON.stringify(inquiries))
+      showSuccess('Inquiry sent successfully!')
       return newInquiry as VehicleInquiry
     }
     
@@ -847,6 +861,7 @@ export const vehicleInquiryService = {
         .single()
       
       if (error) throw error
+      showSuccess('Inquiry sent successfully!')
       return data as VehicleInquiry
     } catch (error) {
       console.warn('Error saving to Supabase, using localStorage:', error)
@@ -854,6 +869,7 @@ export const vehicleInquiryService = {
       const inquiries = saved ? JSON.parse(saved) : []
       inquiries.push(newInquiry)
       localStorage.setItem('vehicle_inquiries', JSON.stringify(inquiries))
+      showSuccess('Inquiry sent successfully!')
       return newInquiry as VehicleInquiry
     }
   },
