@@ -7,8 +7,9 @@ import AdminParts from '../components/admin/AdminParts'
 import AdminPartOrders from '../components/admin/AdminPartOrders'
 import AdminSettings from '../components/admin/AdminSettings'
 import Toast from '../components/Toast'
-import { supabase } from '../lib/supabase'
 import { loadFromSupabaseToLocalStorage, syncLocalStorageToSupabase } from '../lib/syncToSupabase'
+
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123'
 
 interface AdminPortalProps {
   onNavigateHome: () => void
@@ -16,7 +17,6 @@ interface AdminPortalProps {
 
 const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [activeTab, setActiveTab] = useState<'inquiries' | 'inventory' | 'parts' | 'orders' | 'settings'>('inquiries')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -24,109 +24,47 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
   const [showToast, setShowToast] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    // Check if user is already logged in
-    const checkAuth = async () => {
-      if (!supabase) {
-        console.log('Supabase not initialized')
-        return
-      }
-      
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        if (error) {
-          console.warn('Session check error:', error)
-          return
-        }
-        if (session?.user) {
-          console.log('User already logged in:', session.user.email)
-          setIsAuthenticated(true)
-        }
-      } catch (error) {
-        console.warn('Auth check error:', error)
-      }
-    }
-
-    checkAuth()
-
-    // Listen for auth changes
-    if (supabase) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-        console.log('Auth state changed:', _event, session?.user?.email)
-        setIsAuthenticated(!!session?.user)
-      })
-
-      return () => subscription?.unsubscribe()
+    // Check if already authenticated
+    const auth = localStorage.getItem('adminAuth')
+    if (auth === 'true') {
+      setIsAuthenticated(true)
     }
   }, [])
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!email || !password) {
-      setToastMessage('Please enter both email and password.')
+    if (!password) {
+      setToastMessage('Please enter the admin password.')
       setToastType('error')
       setShowToast(true)
       return
     }
 
-    if (!supabase) {
-      setToastMessage('Supabase not available. Please check your configuration.')
+    if (password === ADMIN_PASSWORD) {
+      setIsAuthenticated(true)
+      localStorage.setItem('adminAuth', 'true')
+      setPassword('')
+      setToastMessage('Login successful!')
+      setToastType('success')
+      setShowToast(true)
+    } else {
+      setToastMessage('Invalid password.')
       setToastType('error')
       setShowToast(true)
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      console.log('Attempting login with email:', email)
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password
-      })
-
-      if (error) {
-        console.error('Login error:', error.message)
-        setToastMessage(error.message || 'Invalid email or password.')
-        setToastType('error')
-        setShowToast(true)
-      } else {
-        console.log('Login successful:', data.user?.email)
-        setEmail('')
-        setPassword('')
-        setToastMessage('Login successful!')
-        setToastType('success')
-        setShowToast(true)
-      }
-    } catch (error) {
-      console.error('Login exception:', error)
-      setToastMessage('An error occurred during login.')
-      setToastType('error')
-      setShowToast(true)
-    } finally {
-      setIsLoading(false)
     }
   }
 
-  const handleLogout = async () => {
-    if (!supabase) return
-
-    try {
-      await supabase.auth.signOut()
-      setEmail('')
-      setPassword('')
-      setToastMessage('Logged out successfully')
-      setToastType('success')
-      setShowToast(true)
-      onNavigateHome()
-    } catch (error) {
-      console.error('Logout error:', error)
-      setToastMessage('Error logging out')
-      setToastType('error')
-      setShowToast(true)
-    }
+  const handleLogout = () => {
+    setIsAuthenticated(false)
+    localStorage.removeItem('adminAuth')
+    setPassword('')
+    setToastMessage('Logged out successfully')
+    setToastType('success')
+    setShowToast(true)
+    onNavigateHome()
   }
 
   const handleSync = async () => {
@@ -157,21 +95,9 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
           className="w-full max-w-md card-luxury p-8 relative z-10"
         >
           <h1 className="font-serif text-4xl mb-2">Admin Portal</h1>
-          <p className="text-foreground-muted mb-8">Sign in with your Supabase account</p>
+          <p className="text-foreground-muted mb-8">Enter your admin password</p>
 
           <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label className="label-small block mb-3">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors"
-                placeholder="admin@sacredgarage.com"
-                required
-              />
-            </div>
-
             <div>
               <label className="label-small block mb-3">Password</label>
               <input
@@ -179,17 +105,16 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-background border border-border px-4 py-3 focus:outline-none focus:border-foreground transition-colors"
-                placeholder="Enter your password"
+                placeholder="Enter admin password"
                 required
               />
             </div>
 
             <button
               type="submit"
-              disabled={isLoading}
-              className="btn-primary w-full text-center disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary w-full text-center"
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              Login
             </button>
           </form>
 
