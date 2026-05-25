@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Edit2, Trash2, Plus, Save, X } from 'lucide-react'
+import { Edit2, Trash2, Plus, Save, X, Image as ImageIcon, ChevronUp, ChevronDown } from 'lucide-react'
 import { vehicleService, Vehicle } from '../../lib/supabase'
 
 const AdminInventory = () => {
@@ -8,6 +8,8 @@ const AdminInventory = () => {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Partial<Vehicle>>({})
   const [loading, setLoading] = useState(true)
+  const [showPhotoManager, setShowPhotoManager] = useState(false)
+  const [newPhotoUrl, setNewPhotoUrl] = useState('')
 
   useEffect(() => {
     loadVehicles()
@@ -27,6 +29,7 @@ const AdminInventory = () => {
   const startEdit = (vehicle: Vehicle) => {
     setEditingId(vehicle.id)
     setEditForm(vehicle)
+    setShowPhotoManager(false)
   }
 
   const saveEdit = async () => {
@@ -39,6 +42,7 @@ const AdminInventory = () => {
         setVehicles(updated)
         setEditingId(null)
         setEditForm({})
+        setShowPhotoManager(false)
       } catch (error) {
         console.error('Error saving vehicle:', error)
       }
@@ -72,6 +76,46 @@ const AdminInventory = () => {
     }
   }
 
+  // Photo management functions
+  const addPhoto = () => {
+    if (newPhotoUrl.trim() && editForm.images) {
+      const updatedImages = [...editForm.images, newPhotoUrl.trim()]
+      setEditForm({ ...editForm, images: updatedImages })
+      setNewPhotoUrl('')
+    }
+  }
+
+  const removePhoto = (index: number) => {
+    if (editForm.images) {
+      const updatedImages = editForm.images.filter((_, i) => i !== index)
+      setEditForm({ ...editForm, images: updatedImages })
+    }
+  }
+
+  const movePhotoUp = (index: number) => {
+    if (editForm.images && index > 0) {
+      const updatedImages = [...editForm.images]
+      ;[updatedImages[index - 1], updatedImages[index]] = [updatedImages[index], updatedImages[index - 1]]
+      setEditForm({ ...editForm, images: updatedImages })
+    }
+  }
+
+  const movePhotoDown = (index: number) => {
+    if (editForm.images && index < editForm.images.length - 1) {
+      const updatedImages = [...editForm.images]
+      ;[updatedImages[index], updatedImages[index + 1]] = [updatedImages[index + 1], updatedImages[index]]
+      setEditForm({ ...editForm, images: updatedImages })
+    }
+  }
+
+  const setMainPhoto = (index: number) => {
+    if (editForm.images) {
+      const mainPhoto = editForm.images[index]
+      const updatedImages = [mainPhoto, ...editForm.images.filter((_, i) => i !== index)]
+      setEditForm({ ...editForm, images: updatedImages, image: mainPhoto })
+    }
+  }
+
   if (loading) {
     return <div className="text-center py-12">Loading inventory...</div>
   }
@@ -97,7 +141,9 @@ const AdminInventory = () => {
           >
             {editingId === vehicle.id ? (
               // Edit Mode
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+                <h3 className="font-serif text-xl mb-4">Edit Vehicle</h3>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="label-small block mb-2">Brand</label>
@@ -150,7 +196,106 @@ const AdminInventory = () => {
                   />
                 </div>
 
-                <div className="flex gap-2">
+                {/* Photo Manager Section */}
+                <div className="border-t border-border pt-4">
+                  <button
+                    onClick={() => setShowPhotoManager(!showPhotoManager)}
+                    className="flex items-center gap-2 text-sm font-medium mb-4 hover:opacity-80 transition-opacity"
+                  >
+                    <ImageIcon size={18} />
+                    {showPhotoManager ? 'Hide' : 'Manage'} Photos ({editForm.images?.length || 0})
+                  </button>
+
+                  {showPhotoManager && (
+                    <div className="space-y-4 bg-background/50 p-4 rounded-sm">
+                      {/* Add Photo */}
+                      <div className="space-y-2">
+                        <label className="label-small block">Add Photo URL</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={newPhotoUrl}
+                            onChange={(e) => setNewPhotoUrl(e.target.value)}
+                            placeholder="https://example.com/photo.jpg"
+                            className="flex-1 bg-background border border-border px-3 py-2 text-sm"
+                            onKeyPress={(e) => e.key === 'Enter' && addPhoto()}
+                          />
+                          <button
+                            onClick={addPhoto}
+                            className="px-3 py-2 bg-green-500/20 text-green-400 rounded-sm hover:bg-green-500/30 text-sm"
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Photo List */}
+                      <div className="space-y-2">
+                        <label className="label-small block">Photos ({editForm.images?.length || 0})</label>
+                        {editForm.images && editForm.images.length > 0 ? (
+                          <div className="space-y-2 max-h-64 overflow-y-auto">
+                            {editForm.images.map((photo, idx) => (
+                              <div
+                                key={idx}
+                                className={`flex items-center gap-2 p-2 rounded-sm border ${
+                                  idx === 0
+                                    ? 'border-motorsport-red/50 bg-motorsport-red/10'
+                                    : 'border-border bg-background'
+                                }`}
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs truncate">{photo}</p>
+                                  {idx === 0 && <p className="text-xs text-motorsport-red">Main Photo</p>}
+                                </div>
+
+                                <div className="flex gap-1">
+                                  {idx > 0 && (
+                                    <button
+                                      onClick={() => movePhotoUp(idx)}
+                                      className="p-1 hover:bg-foreground-faint/20 rounded"
+                                      title="Move up"
+                                    >
+                                      <ChevronUp size={14} />
+                                    </button>
+                                  )}
+                                  {idx < (editForm.images?.length || 0) - 1 && (
+                                    <button
+                                      onClick={() => movePhotoDown(idx)}
+                                      className="p-1 hover:bg-foreground-faint/20 rounded"
+                                      title="Move down"
+                                    >
+                                      <ChevronDown size={14} />
+                                    </button>
+                                  )}
+                                  {idx !== 0 && (
+                                    <button
+                                      onClick={() => setMainPhoto(idx)}
+                                      className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30"
+                                      title="Set as main"
+                                    >
+                                      Main
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => removePhoto(idx)}
+                                    className="p-1 hover:bg-motorsport-red/20 text-motorsport-red rounded"
+                                    title="Remove"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-foreground-muted">No photos added yet</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2 pt-4 border-t border-border">
                   <button
                     onClick={saveEdit}
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 rounded-sm hover:bg-green-500/30"
@@ -183,6 +328,9 @@ const AdminInventory = () => {
                         : 'bg-motorsport-red/20 text-motorsport-red'
                     }`}>
                       {vehicle.available ? 'Available' : 'Sold'}
+                    </span>
+                    <span className="px-3 py-1 rounded-sm text-xs font-medium bg-blue-500/20 text-blue-400">
+                      {vehicle.images?.length || 0} photos
                     </span>
                   </div>
                 </div>
