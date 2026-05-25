@@ -4,6 +4,7 @@
 **Build Status:** ✅ Passing (0 TypeScript errors)  
 **Session Progress:** 7 CRITICAL ISSUES COMPLETED! 🎉
 **Git Commits:** 
+- `f1b8fb4` - fix: correct Supabase column names from camelCase to snake_case
 - `e517c41` - feat: implement input validation and real-time sync
 - `7df6bcb` - docs: update session completion status
 - `9e582b7` - feat: implement email notifications with Resend
@@ -11,6 +12,13 @@
 ---
 
 ## ✅ ALL CRITICAL ISSUES COMPLETED!
+
+### 🔧 HOTFIX: Supabase Column Name Mismatch ✅
+- **Issue:** Queries were using camelCase (`createdAt`) but Supabase tables use snake_case (`created_at`)
+- **Error:** `column inquiries.createdAt does not exist`
+- **Solution:** Updated all `.order()` calls in `supabase.ts` and `syncToSupabase.ts` to use snake_case
+- **Status:** Fixed and committed
+- **Commit:** `f1b8fb4`
 
 ### 1. Error Boundaries ✅
 - App won't crash on component errors
