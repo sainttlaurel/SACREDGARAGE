@@ -12,10 +12,23 @@ import Contact from './components/Contact'
 import Footer from './components/Footer'
 import ThemeToggle from './components/ThemeToggle'
 import AdminPortal from './pages/AdminPortal'
+import { loadFromSupabaseToLocalStorage, syncLocalStorageToSupabase } from './lib/syncToSupabase'
 
 function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAdminPage, setIsAdminPage] = useState(window.location.pathname === '/admin')
+
+  useEffect(() => {
+    // Sync data on app load
+    const initializeData = async () => {
+      // First, load from Supabase to get latest data
+      await loadFromSupabaseToLocalStorage()
+      // Then, sync any local changes back to Supabase
+      await syncLocalStorageToSupabase()
+    }
+    
+    initializeData()
+  }, [])
 
   useEffect(() => {
     const handlePopState = () => {

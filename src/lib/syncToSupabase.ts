@@ -1,0 +1,250 @@
+import { supabase, isSupabaseAvailable } from './supabase'
+
+/**
+ * Sync all localStorage data to Supabase
+ * This ensures data persists across browsers and devices
+ */
+export const syncLocalStorageToSupabase = async () => {
+  if (!isSupabaseAvailable || !supabase) {
+    console.log('Supabase not available, skipping sync')
+    return
+  }
+
+  try {
+    console.log('🔄 Starting localStorage to Supabase sync...')
+
+    // Sync inquiries
+    const inquiries = localStorage.getItem('inquiries')
+    if (inquiries) {
+      try {
+        const data = JSON.parse(inquiries)
+        if (Array.isArray(data) && data.length > 0) {
+          console.log(`📤 Syncing ${data.length} inquiries to Supabase...`)
+          for (const inquiry of data) {
+            try {
+              await supabase
+                .from('inquiries')
+                .upsert([inquiry], { onConflict: 'id' })
+            } catch (error) {
+              console.warn('Error syncing inquiry:', error)
+            }
+          }
+          console.log('✅ Inquiries synced')
+        }
+      } catch (error) {
+        console.warn('Error parsing inquiries:', error)
+      }
+    }
+
+    // Sync vehicles
+    const vehicles = localStorage.getItem('vehicles')
+    if (vehicles) {
+      try {
+        const data = JSON.parse(vehicles)
+        if (Array.isArray(data) && data.length > 0) {
+          console.log(`📤 Syncing ${data.length} vehicles to Supabase...`)
+          for (const vehicle of data) {
+            try {
+              await supabase
+                .from('vehicles')
+                .upsert([vehicle], { onConflict: 'id' })
+            } catch (error) {
+              console.warn('Error syncing vehicle:', error)
+            }
+          }
+          console.log('✅ Vehicles synced')
+        }
+      } catch (error) {
+        console.warn('Error parsing vehicles:', error)
+      }
+    }
+
+    // Sync parts
+    const parts = localStorage.getItem('parts')
+    if (parts) {
+      try {
+        const data = JSON.parse(parts)
+        if (Array.isArray(data) && data.length > 0) {
+          console.log(`📤 Syncing ${data.length} parts to Supabase...`)
+          for (const part of data) {
+            try {
+              await supabase
+                .from('parts')
+                .upsert([part], { onConflict: 'id' })
+            } catch (error) {
+              console.warn('Error syncing part:', error)
+            }
+          }
+          console.log('✅ Parts synced')
+        }
+      } catch (error) {
+        console.warn('Error parsing parts:', error)
+      }
+    }
+
+    // Sync part orders
+    const partOrders = localStorage.getItem('part_orders')
+    if (partOrders) {
+      try {
+        const data = JSON.parse(partOrders)
+        if (Array.isArray(data) && data.length > 0) {
+          console.log(`📤 Syncing ${data.length} part orders to Supabase...`)
+          for (const order of data) {
+            try {
+              await supabase
+                .from('part_orders')
+                .upsert([order], { onConflict: 'id' })
+            } catch (error) {
+              console.warn('Error syncing part order:', error)
+            }
+          }
+          console.log('✅ Part orders synced')
+        }
+      } catch (error) {
+        console.warn('Error parsing part orders:', error)
+      }
+    }
+
+    // Sync vehicle inquiries
+    const vehicleInquiries = localStorage.getItem('vehicle_inquiries')
+    if (vehicleInquiries) {
+      try {
+        const data = JSON.parse(vehicleInquiries)
+        if (Array.isArray(data) && data.length > 0) {
+          console.log(`📤 Syncing ${data.length} vehicle inquiries to Supabase...`)
+          for (const inquiry of data) {
+            try {
+              await supabase
+                .from('vehicle_inquiries')
+                .upsert([inquiry], { onConflict: 'id' })
+            } catch (error) {
+              console.warn('Error syncing vehicle inquiry:', error)
+            }
+          }
+          console.log('✅ Vehicle inquiries synced')
+        }
+      } catch (error) {
+        console.warn('Error parsing vehicle inquiries:', error)
+      }
+    }
+
+    // Sync business settings
+    const settings = localStorage.getItem('business_settings')
+    if (settings) {
+      try {
+        const data = JSON.parse(settings)
+        if (data && data.id) {
+          console.log('📤 Syncing business settings to Supabase...')
+          try {
+            await supabase
+              .from('business_settings')
+              .upsert([data], { onConflict: 'id' })
+          } catch (error) {
+            console.warn('Error syncing settings:', error)
+          }
+          console.log('✅ Settings synced')
+        }
+      } catch (error) {
+        console.warn('Error parsing settings:', error)
+      }
+    }
+
+    console.log('✅ Sync complete!')
+  } catch (error) {
+    console.error('Error during sync:', error)
+  }
+}
+
+/**
+ * Load all data from Supabase and update localStorage
+ * This ensures we have the latest data from the cloud
+ */
+export const loadFromSupabaseToLocalStorage = async () => {
+  if (!isSupabaseAvailable || !supabase) {
+    console.log('Supabase not available, skipping load')
+    return
+  }
+
+  try {
+    console.log('🔄 Loading data from Supabase...')
+
+    // Load inquiries
+    try {
+      const { data: inquiries, error } = await supabase
+        .from('inquiries')
+        .select('*')
+        .order('createdAt', { ascending: false })
+      
+      if (!error && inquiries && inquiries.length > 0) {
+        localStorage.setItem('inquiries', JSON.stringify(inquiries))
+        console.log(`✅ Loaded ${inquiries.length} inquiries from Supabase`)
+      }
+    } catch (error) {
+      console.warn('Error loading inquiries:', error)
+    }
+
+    // Load vehicles
+    try {
+      const { data: vehicles, error } = await supabase
+        .from('vehicles')
+        .select('*')
+        .order('createdAt', { ascending: false })
+      
+      if (!error && vehicles && vehicles.length > 0) {
+        localStorage.setItem('vehicles', JSON.stringify(vehicles))
+        console.log(`✅ Loaded ${vehicles.length} vehicles from Supabase`)
+      }
+    } catch (error) {
+      console.warn('Error loading vehicles:', error)
+    }
+
+    // Load parts
+    try {
+      const { data: parts, error } = await supabase
+        .from('parts')
+        .select('*')
+        .order('createdAt', { ascending: false })
+      
+      if (!error && parts && parts.length > 0) {
+        localStorage.setItem('parts', JSON.stringify(parts))
+        console.log(`✅ Loaded ${parts.length} parts from Supabase`)
+      }
+    } catch (error) {
+      console.warn('Error loading parts:', error)
+    }
+
+    // Load part orders
+    try {
+      const { data: partOrders, error } = await supabase
+        .from('part_orders')
+        .select('*')
+        .order('createdAt', { ascending: false })
+      
+      if (!error && partOrders && partOrders.length > 0) {
+        localStorage.setItem('part_orders', JSON.stringify(partOrders))
+        console.log(`✅ Loaded ${partOrders.length} part orders from Supabase`)
+      }
+    } catch (error) {
+      console.warn('Error loading part orders:', error)
+    }
+
+    // Load vehicle inquiries
+    try {
+      const { data: vehicleInquiries, error } = await supabase
+        .from('vehicle_inquiries')
+        .select('*')
+        .order('createdAt', { ascending: false })
+      
+      if (!error && vehicleInquiries && vehicleInquiries.length > 0) {
+        localStorage.setItem('vehicle_inquiries', JSON.stringify(vehicleInquiries))
+        console.log(`✅ Loaded ${vehicleInquiries.length} vehicle inquiries from Supabase`)
+      }
+    } catch (error) {
+      console.warn('Error loading vehicle inquiries:', error)
+    }
+
+    console.log('✅ Load complete!')
+  } catch (error) {
+    console.error('Error during load:', error)
+  }
+}
