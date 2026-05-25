@@ -64,6 +64,20 @@ export interface BusinessSettings {
   updatedAt: string
 }
 
+export interface Part {
+  id: string
+  image: string
+  category: string
+  name: string
+  brand: string
+  price: string
+  condition: string
+  description: string
+  available: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 // Inquiry functions
 export const inquiryService = {
   async getAll() {
@@ -465,6 +479,156 @@ export const settingsService = {
       const updated = { ...data, ...updatedData }
       localStorage.setItem('business_settings', JSON.stringify(updated))
       return updated as BusinessSettings
+    }
+  }
+}
+
+// Parts functions
+export const partsService = {
+  async getAll() {
+    if (!isSupabaseAvailable || !supabase) {
+      const saved = localStorage.getItem('parts')
+      return saved ? JSON.parse(saved) : []
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('parts')
+        .select('*')
+        .order('createdAt', { ascending: false })
+      
+      if (error) throw error
+      return data as Part[]
+    } catch (error) {
+      console.warn('Error fetching from Supabase, using localStorage:', error)
+      const saved = localStorage.getItem('parts')
+      return saved ? JSON.parse(saved) : []
+    }
+  },
+
+  async getById(id: string) {
+    if (!isSupabaseAvailable || !supabase) {
+      const saved = localStorage.getItem('parts')
+      const parts = saved ? JSON.parse(saved) : []
+      return parts.find((p: Part) => p.id === id)
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('parts')
+        .select('*')
+        .eq('id', id)
+        .single()
+      
+      if (error) throw error
+      return data as Part
+    } catch (error) {
+      console.warn('Error fetching from Supabase, using localStorage:', error)
+      const saved = localStorage.getItem('parts')
+      const parts = saved ? JSON.parse(saved) : []
+      return parts.find((p: Part) => p.id === id)
+    }
+  },
+
+  async create(part: Omit<Part, 'id' | 'createdAt' | 'updatedAt'>) {
+    const newPart = {
+      id: Date.now().toString(),
+      ...part,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+
+    if (!isSupabaseAvailable || !supabase) {
+      const saved = localStorage.getItem('parts')
+      const parts = saved ? JSON.parse(saved) : []
+      parts.push(newPart)
+      localStorage.setItem('parts', JSON.stringify(parts))
+      return newPart as Part
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('parts')
+        .insert([newPart])
+        .select()
+        .single()
+      
+      if (error) throw error
+      return data as Part
+    } catch (error) {
+      console.warn('Error saving to Supabase, using localStorage:', error)
+      const saved = localStorage.getItem('parts')
+      const parts = saved ? JSON.parse(saved) : []
+      parts.push(newPart)
+      localStorage.setItem('parts', JSON.stringify(parts))
+      return newPart as Part
+    }
+  },
+
+  async update(id: string, updates: Partial<Part>) {
+    const updatedData = {
+      ...updates,
+      updatedAt: new Date().toISOString()
+    }
+
+    if (!isSupabaseAvailable || !supabase) {
+      const saved = localStorage.getItem('parts')
+      const parts = saved ? JSON.parse(saved) : []
+      const index = parts.findIndex((p: Part) => p.id === id)
+      if (index !== -1) {
+        parts[index] = { ...parts[index], ...updatedData }
+        localStorage.setItem('parts', JSON.stringify(parts))
+        return parts[index]
+      }
+      throw new Error('Part not found')
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('parts')
+        .update(updatedData)
+        .eq('id', id)
+        .select()
+        .single()
+      
+      if (error) throw error
+      return data as Part
+    } catch (error) {
+      console.warn('Error updating in Supabase, using localStorage:', error)
+      const saved = localStorage.getItem('parts')
+      const parts = saved ? JSON.parse(saved) : []
+      const index = parts.findIndex((p: Part) => p.id === id)
+      if (index !== -1) {
+        parts[index] = { ...parts[index], ...updatedData }
+        localStorage.setItem('parts', JSON.stringify(parts))
+        return parts[index]
+      }
+      throw new Error('Part not found')
+    }
+  },
+
+  async delete(id: string) {
+    if (!isSupabaseAvailable || !supabase) {
+      const saved = localStorage.getItem('parts')
+      const parts = saved ? JSON.parse(saved) : []
+      const filtered = parts.filter((p: Part) => p.id !== id)
+      localStorage.setItem('parts', JSON.stringify(filtered))
+      return
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('parts')
+        .delete()
+        .eq('id', id)
+      
+      if (error) throw error
+    } catch (error) {
+      console.warn('Error deleting from Supabase, using localStorage:', error)
+      const saved = localStorage.getItem('parts')
+      const parts = saved ? JSON.parse(saved) : []
+      const filtered = parts.filter((p: Part) => p.id !== id)
+      localStorage.setItem('parts', JSON.stringify(filtered))
     }
   }
 }

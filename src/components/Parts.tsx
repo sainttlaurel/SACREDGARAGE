@@ -1,77 +1,139 @@
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import PartCard from './PartCard'
 import PartModal from './PartModal'
+import { partsService, Part } from '../lib/supabase'
 
-const parts = [
+const defaultParts: Part[] = [
   {
-    image: '/image/parts/sample-part.jpg', // You can add actual part images later
+    id: '1',
+    image: '/image/parts/sample-part.jpg',
     category: 'Suspension',
     name: 'Coilover Kit',
     brand: 'BC Racing',
     price: '₱45,000',
     condition: 'Brand New',
-    description: 'Adjustable coilover suspension kit. Height and damping adjustable. Fits various applications.'
+    description: 'Adjustable coilover suspension kit. Height and damping adjustable. Fits various applications.',
+    available: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
+    id: '2',
     image: '/image/parts/sample-part.jpg',
     category: 'Exhaust',
     name: 'Cat-Back Exhaust',
     brand: 'HKS',
     price: '₱35,000',
     condition: 'Used - Excellent',
-    description: 'Stainless steel cat-back exhaust system. Deep tone, minimal drone. Complete with hardware.'
+    description: 'Stainless steel cat-back exhaust system. Deep tone, minimal drone. Complete with hardware.',
+    available: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
+    id: '3',
     image: '/image/parts/sample-part.jpg',
     category: 'Wheels',
     name: 'Forged Wheels 18"',
     brand: 'Rays Volk Racing',
     price: '₱120,000',
     condition: 'Used - Good',
-    description: 'Set of 4 genuine Rays Volk Racing TE37. 18x9.5 +22 offset. Minor curb rash, structurally perfect.'
+    description: 'Set of 4 genuine Rays Volk Racing TE37. 18x9.5 +22 offset. Minor curb rash, structurally perfect.',
+    available: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
+    id: '4',
     image: '/image/parts/sample-part.jpg',
     category: 'Engine',
     name: 'Turbo Kit',
     brand: 'Garrett',
     price: '₱85,000',
     condition: 'Brand New',
-    description: 'Complete turbo kit with manifold, downpipe, and oil lines. Supports up to 400hp.'
+    description: 'Complete turbo kit with manifold, downpipe, and oil lines. Supports up to 400hp.',
+    available: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
+    id: '5',
     image: '/image/parts/sample-part.jpg',
     category: 'Interior',
     name: 'Racing Seats (Pair)',
     brand: 'Bride',
     price: '₱55,000',
     condition: 'Used - Excellent',
-    description: 'Pair of Bride Low Max racing seats. FRP shell, excellent condition. Side mounts included.'
+    description: 'Pair of Bride Low Max racing seats. FRP shell, excellent condition. Side mounts included.',
+    available: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
+    id: '6',
     image: '/image/parts/sample-part.jpg',
     category: 'Electronics',
     name: 'ECU Tuner',
     brand: 'Hondata',
     price: '₱28,000',
     condition: 'Used - Good',
-    description: 'Hondata FlashPro for Honda/Acura. Includes cable and software license. Fully functional.'
+    description: 'Hondata FlashPro for Honda/Acura. Includes cable and software license. Fully functional.',
+    available: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }
 ]
 
 const Parts = () => {
-  const [selectedPart, setSelectedPart] = useState<typeof parts[0] | null>(null)
+  const [parts, setParts] = useState<Part[]>([])
+  const [selectedPart, setSelectedPart] = useState<Part | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  const handleInquire = (part: typeof parts[0]) => {
+  useEffect(() => {
+    loadParts()
+  }, [])
+
+  const loadParts = async () => {
+    try {
+      const data = await partsService.getAll()
+      if (data.length === 0) {
+        // Initialize with default parts if none exist
+        setParts(defaultParts)
+        localStorage.setItem('parts', JSON.stringify(defaultParts))
+      } else {
+        setParts(data)
+      }
+    } catch (error) {
+      console.error('Error loading parts:', error)
+      setParts(defaultParts)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Filter to show only available parts
+  const availableParts = parts.filter(p => p.available)
+
+  const handleInquire = (part: Part) => {
     setSelectedPart(part)
     setIsModalOpen(true)
   }
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
-    setTimeout(() => setSelectedPart(null), 300) // Wait for animation
+    setTimeout(() => setSelectedPart(null), 300)
+  }
+
+  if (loading) {
+    return (
+      <section id="parts" className="relative py-32 overflow-hidden">
+        <div className="container-luxury relative z-10 text-center">
+          <p className="text-foreground-muted">Loading parts...</p>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -105,15 +167,29 @@ const Parts = () => {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {parts.map((part, index) => (
+          {availableParts.map((part, index) => (
             <PartCard 
-              key={index} 
+              key={part.id} 
               {...part} 
               index={index}
               onInquire={() => handleInquire(part)}
             />
           ))}
         </div>
+
+        {availableParts.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-lg text-foreground-muted">
+              All parts are currently sold. Check back soon for new inventory!
+            </p>
+          </div>
+        )}
+
+        {availableParts.length < parts.length && (
+          <p className="text-sm text-foreground-faint text-center mt-4">
+            {parts.length - availableParts.length} part(s) sold
+          </p>
+        )}
 
         {/* Parts Notice */}
         <motion.div
