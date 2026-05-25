@@ -95,8 +95,14 @@ async function networkFirst(request) {
 
   try {
     const response = await fetch(request)
-    if (response.ok) {
-      cache.put(request, response.clone())
+    // Only cache successful responses (200-299) and not partial responses (206)
+    if (response.ok && response.status !== 206) {
+      try {
+        cache.put(request, response.clone())
+      } catch (cacheError) {
+        // Silently fail if cache.put fails (e.g., for 206 responses)
+        console.debug('[SW] Cache put failed:', cacheError.message)
+      }
     }
     return response
   } catch (error) {
