@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { LogOut, Menu, X, Package, MessageSquare, Settings, Wrench, ShoppingCart } from 'lucide-react'
+import { LogOut, Menu, X, Package, MessageSquare, Settings, Wrench, ShoppingCart, RefreshCw } from 'lucide-react'
 import AdminInquiries from '../components/admin/AdminInquiries'
 import AdminInventory from '../components/admin/AdminInventory'
 import AdminParts from '../components/admin/AdminParts'
 import AdminPartOrders from '../components/admin/AdminPartOrders'
 import AdminSettings from '../components/admin/AdminSettings'
+import { loadFromSupabaseToLocalStorage, syncLocalStorageToSupabase } from '../lib/syncToSupabase'
 
 interface AdminPortalProps {
   onNavigateHome: () => void
@@ -16,6 +17,7 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
   const [password, setPassword] = useState('')
   const [activeTab, setActiveTab] = useState<'inquiries' | 'inventory' | 'parts' | 'orders' | 'settings'>('inquiries')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [syncing, setSyncing] = useState(false)
 
   useEffect(() => {
     // Check if already authenticated
@@ -42,6 +44,20 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
     localStorage.removeItem('adminAuth')
     setPassword('')
     onNavigateHome()
+  }
+
+  const handleSync = async () => {
+    setSyncing(true)
+    try {
+      await loadFromSupabaseToLocalStorage()
+      await syncLocalStorageToSupabase()
+      alert('✅ Sync complete! Data is now up to date.')
+    } catch (error) {
+      alert('❌ Sync failed. Check console for details.')
+      console.error('Sync error:', error)
+    } finally {
+      setSyncing(false)
+    }
   }
 
   if (!isAuthenticated) {
@@ -106,6 +122,16 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="flex items-center gap-2 label-small opacity-60 hover:opacity-100 transition-opacity disabled:opacity-30"
+              title="Sync data with Supabase"
+            >
+              <RefreshCw size={18} className={syncing ? 'animate-spin' : ''} />
+              {syncing ? 'Syncing...' : 'Sync'}
+            </button>
+
             <button
               onClick={() => setActiveTab('inquiries')}
               className={`flex items-center gap-2 label-small transition-opacity ${
@@ -178,6 +204,13 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
             className="md:hidden border-t border-border bg-background/95 backdrop-blur-sm"
           >
             <div className="container-luxury py-4 space-y-4">
+              <button
+                onClick={handleSync}
+                disabled={syncing}
+                className="block w-full text-left label-small opacity-60 hover:opacity-100 disabled:opacity-30"
+              >
+                {syncing ? '🔄 Syncing...' : '🔄 Sync Data'}
+              </button>
               <button
                 onClick={() => {
                   setActiveTab('inquiries')
