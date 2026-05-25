@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Edit2, Trash2, Plus, Save, X, Image as ImageIcon, ChevronUp, ChevronDown, Download, GripVertical } from 'lucide-react'
+import { Edit2, Trash2, Plus, Save, X, Image as ImageIcon, ChevronLeft } from 'lucide-react'
 import { vehicleService, Vehicle } from '../../lib/supabase'
 
 const AdminInventory = () => {
@@ -10,7 +10,13 @@ const AdminInventory = () => {
   const [loading, setLoading] = useState(true)
   const [showPhotoManager, setShowPhotoManager] = useState(false)
   const [newPhotoUrl, setNewPhotoUrl] = useState('')
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     loadVehicles()
@@ -77,7 +83,6 @@ const AdminInventory = () => {
     }
   }
 
-  // Photo management functions
   const addPhoto = () => {
     if (newPhotoUrl.trim() && editForm.images) {
       const updatedImages = [...editForm.images, newPhotoUrl.trim()]
@@ -93,22 +98,6 @@ const AdminInventory = () => {
     }
   }
 
-  const movePhotoUp = (index: number) => {
-    if (editForm.images && index > 0) {
-      const updatedImages = [...editForm.images]
-      ;[updatedImages[index - 1], updatedImages[index]] = [updatedImages[index], updatedImages[index - 1]]
-      setEditForm({ ...editForm, images: updatedImages })
-    }
-  }
-
-  const movePhotoDown = (index: number) => {
-    if (editForm.images && index < editForm.images.length - 1) {
-      const updatedImages = [...editForm.images]
-      ;[updatedImages[index], updatedImages[index + 1]] = [updatedImages[index + 1], updatedImages[index]]
-      setEditForm({ ...editForm, images: updatedImages })
-    }
-  }
-
   const setMainPhoto = (index: number) => {
     if (editForm.images) {
       const mainPhoto = editForm.images[index]
@@ -117,55 +106,190 @@ const AdminInventory = () => {
     }
   }
 
-  // Download photo function
-  const downloadPhoto = async (photoUrl: string, vehicleName: string, index: number) => {
-    try {
-      const response = await fetch(photoUrl)
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${vehicleName}-photo-${index + 1}.jpg`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error('Error downloading photo:', error)
-      alert('Failed to download photo. Try copying the URL instead.')
-    }
-  }
-
-  // Drag and drop functions
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index)
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    ;(e.currentTarget as HTMLElement).style.opacity = '0.5'
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    ;(e.currentTarget as HTMLElement).style.opacity = '1'
-  }
-
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
-    e.preventDefault()
-    ;(e.currentTarget as HTMLElement).style.opacity = '1'
-
-    if (draggedIndex !== null && draggedIndex !== targetIndex && editForm.images) {
-      const updatedImages = [...editForm.images]
-      const draggedPhoto = updatedImages[draggedIndex]
-      updatedImages.splice(draggedIndex, 1)
-      updatedImages.splice(targetIndex, 0, draggedPhoto)
-      setEditForm({ ...editForm, images: updatedImages })
-      setDraggedIndex(null)
-    }
-  }
-
   if (loading) {
     return <div className="text-center py-12">Loading inventory...</div>
+  }
+
+  // Edit mode - full screen on mobile
+  if (editingId) {
+    return (
+      <div className={isMobile ? 'fixed inset-0 bg-background z-50 overflow-y-auto' : ''}>
+        <div className={isMobile ? 'p-4' : ''}>
+          <div className={isMobile ? 'space-y-4' : 'card-luxury p-6 space-y-4 max-h-[90vh] overflow-y-auto'}>
+            <div className="flex items-center justify-between mb-4">
+              {isMobile && (
+                <button
+                  onClick={() => setEditingId(null)}
+                  className="flex items-center gap-2 text-sm opacity-60 hover:opacity-100"
+                >
+                  <ChevronLeft size={18} />
+                  Back
+                </button>
+              )}
+              <h3 className="font-serif text-xl">Edit Vehicle</h3>
+              {!isMobile && (
+                <button
+                  onClick={() => setEditingId(null)}
+                  className="p-1 hover:bg-foreground-faint/20 rounded"
+                >
+                  <X size={18} />
+                </button>
+              )}
+            </div>
+
+            {/* Form Fields - Stack on mobile */}
+            <div className={isMobile ? 'space-y-4' : 'grid grid-cols-2 gap-4'}>
+              <div>
+                <label className="label-small block mb-2">Brand</label>
+                <input
+                  type="text"
+                  value={editForm.brand || ''}
+                  onChange={(e) => setEditForm({ ...editForm, brand: e.target.value })}
+                  className="w-full bg-background border border-border px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="label-small block mb-2">Model</label>
+                <input
+                  type="text"
+                  value={editForm.model || ''}
+                  onChange={(e) => setEditForm({ ...editForm, model: e.target.value })}
+                  className="w-full bg-background border border-border px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className={isMobile ? 'space-y-4' : 'grid grid-cols-2 gap-4'}>
+              <div>
+                <label className="label-small block mb-2">Year</label>
+                <input
+                  type="number"
+                  value={editForm.year || ''}
+                  onChange={(e) => setEditForm({ ...editForm, year: parseInt(e.target.value) })}
+                  className="w-full bg-background border border-border px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="label-small block mb-2">Price</label>
+                <input
+                  type="text"
+                  value={editForm.price || ''}
+                  onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                  className="w-full bg-background border border-border px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="label-small block mb-2">Description</label>
+              <textarea
+                value={editForm.description || ''}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                className="w-full bg-background border border-border px-3 py-2 text-sm resize-none"
+                rows={3}
+              />
+            </div>
+
+            {/* Photo Manager Section - Simplified for mobile */}
+            <div className="border-t border-border pt-4">
+              <button
+                onClick={() => setShowPhotoManager(!showPhotoManager)}
+                className="flex items-center gap-2 text-sm font-medium mb-4 hover:opacity-80 transition-opacity w-full"
+              >
+                <ImageIcon size={18} />
+                {showPhotoManager ? 'Hide' : 'Manage'} Photos ({editForm.images?.length || 0})
+              </button>
+
+              {showPhotoManager && (
+                <div className="space-y-4 bg-background/50 p-4 rounded-sm">
+                  <div className="space-y-2">
+                    <label className="label-small block">Add Photo URL</label>
+                    <div className={isMobile ? 'space-y-2' : 'flex gap-2'}>
+                      <input
+                        type="text"
+                        value={newPhotoUrl}
+                        onChange={(e) => setNewPhotoUrl(e.target.value)}
+                        placeholder="https://example.com/photo.jpg"
+                        className={`${isMobile ? 'w-full' : 'flex-1'} bg-background border border-border px-3 py-2 text-sm`}
+                        onKeyPress={(e) => e.key === 'Enter' && addPhoto()}
+                      />
+                      <button
+                        onClick={addPhoto}
+                        className={`${isMobile ? 'w-full' : ''} px-3 py-2 bg-green-500/20 text-green-400 rounded-sm hover:bg-green-500/30 text-sm`}
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="label-small block">Photos ({editForm.images?.length || 0})</label>
+                    {editForm.images && editForm.images.length > 0 ? (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {editForm.images.map((photo, idx) => (
+                          <div
+                            key={idx}
+                            className={`flex items-center gap-2 p-2 rounded-sm border transition-all ${
+                              idx === 0
+                                ? 'border-motorsport-red/50 bg-motorsport-red/10'
+                                : 'border-border bg-background'
+                            }`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs truncate">{photo}</p>
+                              {idx === 0 && <p className="text-xs text-motorsport-red">Main Photo</p>}
+                            </div>
+
+                            <div className={isMobile ? 'flex gap-1 flex-wrap justify-end' : 'flex gap-1 flex-shrink-0'}>
+                              {idx !== 0 && (
+                                <button
+                                  onClick={() => setMainPhoto(idx)}
+                                  className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30"
+                                  title="Set as main"
+                                >
+                                  Main
+                                </button>
+                              )}
+                              <button
+                                onClick={() => removePhoto(idx)}
+                                className="p-1 hover:bg-motorsport-red/20 text-motorsport-red rounded text-xs"
+                                title="Remove"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-foreground-muted">No photos added yet</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 pt-4 border-t border-border">
+              <button
+                onClick={saveEdit}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 rounded-sm hover:bg-green-500/30"
+              >
+                <Save size={18} />
+                {isMobile ? 'Save' : 'Save Changes'}
+              </button>
+              <button
+                onClick={() => setEditingId(null)}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-foreground-faint/20 text-foreground-muted rounded-sm hover:bg-foreground-faint/30"
+              >
+                <X size={18} />
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -174,269 +298,77 @@ const AdminInventory = () => {
         <h2 className="heading-section">Inventory Management</h2>
         <button className="btn-secondary flex items-center gap-2">
           <Plus size={18} />
-          Add Vehicle
+          <span className="hidden sm:inline">Add Vehicle</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Responsive Grid - 1 col on mobile, 2 on tablet, 3 on desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {vehicles.map((vehicle, index) => (
           <motion.div
             key={vehicle.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="card-luxury overflow-hidden"
+            className="card-luxury overflow-hidden flex flex-col"
           >
-            {editingId === vehicle.id ? (
-              // Edit Mode
-              <div className="p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-                <h3 className="font-serif text-xl mb-4">Edit Vehicle</h3>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="label-small block mb-2">Brand</label>
-                    <input
-                      type="text"
-                      value={editForm.brand || ''}
-                      onChange={(e) => setEditForm({ ...editForm, brand: e.target.value })}
-                      className="w-full bg-background border border-border px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="label-small block mb-2">Model</label>
-                    <input
-                      type="text"
-                      value={editForm.model || ''}
-                      onChange={(e) => setEditForm({ ...editForm, model: e.target.value })}
-                      className="w-full bg-background border border-border px-3 py-2 text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="label-small block mb-2">Year</label>
-                    <input
-                      type="number"
-                      value={editForm.year || ''}
-                      onChange={(e) => setEditForm({ ...editForm, year: parseInt(e.target.value) })}
-                      className="w-full bg-background border border-border px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="label-small block mb-2">Price</label>
-                    <input
-                      type="text"
-                      value={editForm.price || ''}
-                      onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
-                      className="w-full bg-background border border-border px-3 py-2 text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="label-small block mb-2">Description</label>
-                  <textarea
-                    value={editForm.description || ''}
-                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                    className="w-full bg-background border border-border px-3 py-2 text-sm resize-none"
-                    rows={3}
-                  />
-                </div>
-
-                {/* Photo Manager Section */}
-                <div className="border-t border-border pt-4">
-                  <button
-                    onClick={() => setShowPhotoManager(!showPhotoManager)}
-                    className="flex items-center gap-2 text-sm font-medium mb-4 hover:opacity-80 transition-opacity"
-                  >
-                    <ImageIcon size={18} />
-                    {showPhotoManager ? 'Hide' : 'Manage'} Photos ({editForm.images?.length || 0})
-                  </button>
-
-                  {showPhotoManager && (
-                    <div className="space-y-4 bg-background/50 p-4 rounded-sm">
-                      {/* Add Photo */}
-                      <div className="space-y-2">
-                        <label className="label-small block">Add Photo URL</label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={newPhotoUrl}
-                            onChange={(e) => setNewPhotoUrl(e.target.value)}
-                            placeholder="https://example.com/photo.jpg"
-                            className="flex-1 bg-background border border-border px-3 py-2 text-sm"
-                            onKeyPress={(e) => e.key === 'Enter' && addPhoto()}
-                          />
-                          <button
-                            onClick={addPhoto}
-                            className="px-3 py-2 bg-green-500/20 text-green-400 rounded-sm hover:bg-green-500/30 text-sm"
-                          >
-                            Add
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Photo List with Drag and Drop */}
-                      <div className="space-y-2">
-                        <label className="label-small block">Photos ({editForm.images?.length || 0}) - Drag to reorder</label>
-                        {editForm.images && editForm.images.length > 0 ? (
-                          <div className="space-y-2 max-h-64 overflow-y-auto">
-                            {editForm.images.map((photo, idx) => (
-                              <div
-                                key={idx}
-                                draggable
-                                onDragStart={() => handleDragStart(idx)}
-                                onDragOver={handleDragOver}
-                                onDragLeave={handleDragLeave}
-                                onDrop={(e) => handleDrop(e, idx)}
-                                className={`flex items-center gap-2 p-2 rounded-sm border cursor-move transition-all ${
-                                  draggedIndex === idx
-                                    ? 'opacity-50 border-motorsport-red'
-                                    : idx === 0
-                                    ? 'border-motorsport-red/50 bg-motorsport-red/10'
-                                    : 'border-border bg-background'
-                                }`}
-                              >
-                                <GripVertical size={16} className="text-foreground-muted flex-shrink-0" />
-                                
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs truncate">{photo}</p>
-                                  {idx === 0 && <p className="text-xs text-motorsport-red">Main Photo</p>}
-                                </div>
-
-                                <div className="flex gap-1 flex-shrink-0">
-                                  {idx > 0 && (
-                                    <button
-                                      onClick={() => movePhotoUp(idx)}
-                                      className="p-1 hover:bg-foreground-faint/20 rounded"
-                                      title="Move up"
-                                    >
-                                      <ChevronUp size={14} />
-                                    </button>
-                                  )}
-                                  {idx < (editForm.images?.length || 0) - 1 && (
-                                    <button
-                                      onClick={() => movePhotoDown(idx)}
-                                      className="p-1 hover:bg-foreground-faint/20 rounded"
-                                      title="Move down"
-                                    >
-                                      <ChevronDown size={14} />
-                                    </button>
-                                  )}
-                                  {idx !== 0 && (
-                                    <button
-                                      onClick={() => setMainPhoto(idx)}
-                                      className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30"
-                                      title="Set as main"
-                                    >
-                                      Main
-                                    </button>
-                                  )}
-                                  <button
-                                    onClick={() => downloadPhoto(photo, `${editForm.brand}-${editForm.model}`, idx)}
-                                    className="p-1 hover:bg-green-500/20 text-green-400 rounded"
-                                    title="Download photo"
-                                  >
-                                    <Download size={14} />
-                                  </button>
-                                  <button
-                                    onClick={() => removePhoto(idx)}
-                                    className="p-1 hover:bg-motorsport-red/20 text-motorsport-red rounded"
-                                    title="Remove"
-                                  >
-                                    <X size={14} />
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-xs text-foreground-muted">No photos added yet</p>
-                        )}
-                      </div>
-
-                      <p className="text-xs text-foreground-faint">💡 Tip: Drag photos to reorder, or use arrow buttons</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-2 pt-4 border-t border-border">
-                  <button
-                    onClick={saveEdit}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 rounded-sm hover:bg-green-500/30"
-                  >
-                    <Save size={18} />
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-foreground-faint/20 text-foreground-muted rounded-sm hover:bg-foreground-faint/30"
-                  >
-                    <X size={18} />
-                    Cancel
-                  </button>
-                </div>
+            {/* Image */}
+            <div className="relative aspect-[16/10] overflow-hidden">
+              <img
+                src={vehicle.image}
+                alt={`${vehicle.brand} ${vehicle.model}`}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute top-2 right-2 sm:top-4 sm:right-4 flex gap-2 flex-wrap justify-end">
+                <span className={`px-2 sm:px-3 py-1 rounded-sm text-xs font-medium ${
+                  vehicle.available
+                    ? 'bg-green-500/20 text-green-400'
+                    : 'bg-motorsport-red/20 text-motorsport-red'
+                }`}>
+                  {vehicle.available ? 'Available' : 'Sold'}
+                </span>
+                <span className="px-2 sm:px-3 py-1 rounded-sm text-xs font-medium bg-blue-500/20 text-blue-400">
+                  {vehicle.images?.length || 0} 📷
+                </span>
               </div>
-            ) : (
-              // View Mode
-              <>
-                <div className="relative aspect-[16/10] overflow-hidden">
-                  <img
-                    src={vehicle.image}
-                    alt={`${vehicle.brand} ${vehicle.model}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-4 right-4 flex gap-2">
-                    <span className={`px-3 py-1 rounded-sm text-xs font-medium ${
-                      vehicle.available
-                        ? 'bg-green-500/20 text-green-400'
-                        : 'bg-motorsport-red/20 text-motorsport-red'
-                    }`}>
-                      {vehicle.available ? 'Available' : 'Sold'}
-                    </span>
-                    <span className="px-3 py-1 rounded-sm text-xs font-medium bg-blue-500/20 text-blue-400">
-                      {vehicle.images?.length || 0} photos
-                    </span>
-                  </div>
-                </div>
+            </div>
 
-                <div className="p-6 space-y-4">
-                  <div>
-                    <h3 className="font-serif text-xl">
-                      {vehicle.brand} {vehicle.model}
-                    </h3>
-                    <p className="text-sm text-foreground-muted">
-                      {vehicle.year} • {vehicle.price}
-                    </p>
-                  </div>
+            {/* Content */}
+            <div className="p-4 sm:p-6 space-y-4 flex-1 flex flex-col">
+              <div>
+                <h3 className="font-serif text-lg sm:text-xl">
+                  {vehicle.brand} {vehicle.model}
+                </h3>
+                <p className="text-xs sm:text-sm text-foreground-muted">
+                  {vehicle.year} • {vehicle.price}
+                </p>
+              </div>
 
-                  <p className="text-sm line-clamp-2">{vehicle.description}</p>
+              <p className="text-xs sm:text-sm line-clamp-2 flex-1">{vehicle.description}</p>
 
-                  <div className="flex gap-2 pt-4 border-t border-border">
-                    <button
-                      onClick={() => startEdit(vehicle)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500/20 text-blue-400 rounded-sm hover:bg-blue-500/30"
-                    >
-                      <Edit2 size={18} />
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => toggleAvailability(vehicle.id)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-foreground-faint/20 text-foreground-muted rounded-sm hover:bg-foreground-faint/30"
-                    >
-                      {vehicle.available ? 'Mark Sold' : 'Mark Available'}
-                    </button>
-                    <button
-                      onClick={() => deleteVehicle(vehicle.id)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-motorsport-red/20 text-motorsport-red rounded-sm hover:bg-motorsport-red/30"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
+              {/* Action Buttons - Stack on mobile */}
+              <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-border">
+                <button
+                  onClick={() => startEdit(vehicle)}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-500/20 text-blue-400 rounded-sm hover:bg-blue-500/30 text-sm"
+                >
+                  <Edit2 size={16} />
+                  <span className="hidden sm:inline">Edit</span>
+                </button>
+                <button
+                  onClick={() => toggleAvailability(vehicle.id)}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-foreground-faint/20 text-foreground-muted rounded-sm hover:bg-foreground-faint/30 text-sm"
+                >
+                  {vehicle.available ? '✓ Sold' : '✓ Available'}
+                </button>
+                <button
+                  onClick={() => deleteVehicle(vehicle.id)}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-motorsport-red/20 text-motorsport-red rounded-sm hover:bg-motorsport-red/30 text-sm"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
           </motion.div>
         ))}
       </div>

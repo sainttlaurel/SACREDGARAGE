@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Trash2, Eye, Check } from 'lucide-react'
+import { Trash2, Eye, Check, ChevronLeft } from 'lucide-react'
 import { inquiryService, Inquiry } from '../../lib/supabase'
 
 const AdminInquiries = () => {
@@ -8,6 +8,13 @@ const AdminInquiries = () => {
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null)
   const [filter, setFilter] = useState<'all' | 'new' | 'read' | 'responded'>('all')
   const [loading, setLoading] = useState(true)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     loadInquiries()
@@ -93,18 +100,110 @@ const AdminInquiries = () => {
     return <div className="text-center py-12">Loading inquiries...</div>
   }
 
+  // Mobile: Show details as full-screen modal
+  if (isMobile && selectedInquiry) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="fixed inset-0 bg-background z-50 overflow-y-auto"
+      >
+        <div className="p-4 space-y-4">
+          <button
+            onClick={() => setSelectedInquiry(null)}
+            className="flex items-center gap-2 text-sm opacity-60 hover:opacity-100 mb-4"
+          >
+            <ChevronLeft size={18} />
+            Back to List
+          </button>
+
+          <div className="card-luxury p-4 space-y-4">
+            <h3 className="font-serif text-xl">Inquiry Details</h3>
+
+            <div className="space-y-3">
+              <div>
+                <p className="label-small mb-1">Name</p>
+                <p className="text-sm">{selectedInquiry.firstName} {selectedInquiry.lastName}</p>
+              </div>
+
+              <div>
+                <p className="label-small mb-1">Email</p>
+                <a href={`mailto:${selectedInquiry.email}`} className="text-motorsport-red hover:underline text-sm">
+                  {selectedInquiry.email}
+                </a>
+              </div>
+
+              <div>
+                <p className="label-small mb-1">Phone</p>
+                <a href={`tel:${selectedInquiry.phone}`} className="text-motorsport-red hover:underline text-sm">
+                  {selectedInquiry.phone}
+                </a>
+              </div>
+
+              <div>
+                <p className="label-small mb-1">Message</p>
+                <p className="text-sm leading-relaxed">{selectedInquiry.message}</p>
+              </div>
+
+              <div>
+                <p className="label-small mb-1">Status</p>
+                <span className={`text-xs px-3 py-1 rounded-sm inline-block ${getStatusColor(selectedInquiry.status)}`}>
+                  {selectedInquiry.status}
+                </span>
+              </div>
+
+              <div>
+                <p className="label-small mb-1">Date</p>
+                <p className="text-xs text-foreground-muted">
+                  {new Date(selectedInquiry.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+
+            {/* Actions - Full width on mobile */}
+            <div className="space-y-2 border-t border-border pt-4">
+              <button
+                onClick={() => updateStatus(selectedInquiry.id, 'read')}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500/20 text-blue-400 rounded-sm hover:bg-blue-500/30 transition-colors text-sm"
+              >
+                <Check size={16} />
+                Mark as Read
+              </button>
+
+              <button
+                onClick={() => updateStatus(selectedInquiry.id, 'responded')}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 rounded-sm hover:bg-green-500/30 transition-colors text-sm"
+              >
+                <Check size={16} />
+                Mark as Responded
+              </button>
+
+              <button
+                onClick={() => deleteInquiry(selectedInquiry.id)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-motorsport-red/20 text-motorsport-red rounded-sm hover:bg-motorsport-red/30 transition-colors text-sm"
+              >
+                <Trash2 size={16} />
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className={isMobile ? 'space-y-4' : 'grid grid-cols-1 lg:grid-cols-3 gap-8'}>
       {/* Inquiries List */}
-      <div className="lg:col-span-2 space-y-4">
-        <div className="flex items-center justify-between mb-6">
+      <div className={isMobile ? 'space-y-4' : 'lg:col-span-2 space-y-4'}>
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
           <h2 className="heading-section">Inquiries</h2>
-          <div className="flex gap-2">
+          <div className={isMobile ? 'flex gap-1 flex-wrap' : 'flex gap-2'}>
             {(['all', 'new', 'read', 'responded'] as const).map(status => (
               <button
                 key={status}
                 onClick={() => setFilter(status)}
-                className={`px-4 py-2 rounded-sm text-sm uppercase tracking-luxury transition-all ${
+                className={`px-2 sm:px-4 py-2 rounded-sm text-xs sm:text-sm uppercase tracking-luxury transition-all ${
                   filter === status
                     ? 'bg-foreground text-background'
                     : 'bg-card border border-border hover:border-foreground'
@@ -129,27 +228,27 @@ const AdminInquiries = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => setSelectedInquiry(inquiry)}
-                className={`p-4 card-luxury cursor-pointer hover:border-foreground transition-all ${
+                className={`p-3 sm:p-4 card-luxury cursor-pointer hover:border-foreground transition-all ${
                   selectedInquiry?.id === inquiry.id ? 'border-foreground' : ''
                 }`}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-medium">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <h3 className="font-medium text-sm sm:text-base">
                         {inquiry.firstName} {inquiry.lastName}
                       </h3>
                       <span className={`text-xs px-2 py-1 rounded-sm ${getStatusColor(inquiry.status)}`}>
                         {inquiry.status}
                       </span>
                     </div>
-                    <p className="text-sm text-foreground-muted mb-2">{inquiry.email}</p>
-                    <p className="text-sm line-clamp-2">{inquiry.message}</p>
+                    <p className="text-xs sm:text-sm text-foreground-muted mb-2 truncate">{inquiry.email}</p>
+                    <p className="text-xs sm:text-sm line-clamp-2">{inquiry.message}</p>
                     <p className="text-xs text-foreground-faint mt-2">
                       {new Date(inquiry.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <Eye size={18} className="opacity-60" />
+                  <Eye size={16} className="opacity-60 flex-shrink-0 mt-1" />
                 </div>
               </motion.div>
             ))
@@ -157,8 +256,8 @@ const AdminInquiries = () => {
         </div>
       </div>
 
-      {/* Inquiry Details */}
-      {selectedInquiry && (
+      {/* Inquiry Details - Sidebar on desktop only */}
+      {!isMobile && selectedInquiry && (
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
