@@ -29,11 +29,19 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
   useEffect(() => {
     // Check if user is already logged in
     const checkAuth = async () => {
-      if (!supabase) return
+      if (!supabase) {
+        console.error('Supabase not initialized')
+        return
+      }
       
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) {
+          console.error('Session check error:', error)
+          return
+        }
         if (session?.user) {
+          console.log('User already logged in:', session.user.email)
           setIsAuthenticated(true)
         }
       } catch (error) {
@@ -46,6 +54,7 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
     // Listen for auth changes
     if (supabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+        console.log('Auth state changed:', _event, session?.user?.email)
         setIsAuthenticated(!!session?.user)
       })
 
@@ -57,7 +66,15 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
     e.preventDefault()
     
     if (!supabase) {
+      console.error('Supabase not available')
       setToastMessage('Supabase not available. Please check your configuration.')
+      setToastType('error')
+      setShowToast(true)
+      return
+    }
+
+    if (!email || !password) {
+      setToastMessage('Please enter both email and password.')
       setToastType('error')
       setShowToast(true)
       return
@@ -65,25 +82,29 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
 
     setIsLoading(true)
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      console.log('Attempting login with email:', email)
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
         password
       })
 
       if (error) {
+        console.error('Login error:', error)
         setToastMessage(error.message || 'Login failed. Please check your credentials.')
         setToastType('error')
         setShowToast(true)
       } else {
+        console.log('Login successful:', data.user?.email)
         setEmail('')
         setPassword('')
         setToastMessage('Login successful!')
         setToastType('success')
         setShowToast(true)
+        // Auth state change listener will handle setting isAuthenticated
       }
     } catch (error) {
-      console.error('Login error:', error)
-      setToastMessage('An error occurred during login.')
+      console.error('Login exception:', error)
+      setToastMessage('An error occurred during login. Check console for details.')
       setToastType('error')
       setShowToast(true)
     } finally {
