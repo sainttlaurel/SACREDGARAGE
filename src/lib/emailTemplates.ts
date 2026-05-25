@@ -242,8 +242,6 @@ export const newPartOrderTemplate = (data: {
   deliveryOption: string
   timestamp: string
 }): EmailTemplate => {
-  const totalPrice = `${data.partPrice} × ${data.quantity}`
-
   const html = `
 <!DOCTYPE html>
 <html>

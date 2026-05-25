@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import PartCard from './PartCard'
 import PartModal from './PartModal'
 import PartsPurchaseModal from './PartsPurchaseModal'
-import { partsService, Part } from '../lib/supabase'
+import { Part } from '../lib/supabase'
 import { subscribeToTable, loadInitialData } from '../lib/realtimeSubscriptions'
 
 const defaultParts: Part[] = [
@@ -116,24 +116,6 @@ const Parts = () => {
       }
     }
   }, [])
-
-  const loadParts = async () => {
-    try {
-      const data = await partsService.getAll()
-      if (data.length === 0) {
-        // Initialize with default parts if none exist
-        setParts(defaultParts)
-        localStorage.setItem('parts', JSON.stringify(defaultParts))
-      } else {
-        setParts(data)
-      }
-    } catch (error) {
-      console.error('Error loading parts:', error)
-      setParts(defaultParts)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // Filter to show only available parts
   const availableParts = parts.filter(p => p.available)

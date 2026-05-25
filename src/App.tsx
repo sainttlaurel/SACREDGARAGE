@@ -1,20 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import LoadingScreen from './components/LoadingScreen'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import Features from './components/Features'
 import Inventory from './components/Inventory'
 import Parts from './components/Parts'
-import GalleryWall from './components/GalleryWall'
-import Showreel from './components/Showreel'
 import CTA from './components/CTA'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
 import ThemeToggle from './components/ThemeToggle'
 import ToastContainer from './components/ToastContainer'
-import AdminPortal from './pages/AdminPortal'
 import ErrorBoundary from './components/ErrorBoundary'
 import { loadFromSupabaseToLocalStorage, syncLocalStorageToSupabase } from './lib/syncToSupabase'
+
+// Lazy load heavy components
+const GalleryWall = lazy(() => import('./components/GalleryWall'))
+const Showreel = lazy(() => import('./components/Showreel'))
+const AdminPortal = lazy(() => import('./pages/AdminPortal'))
 
 function App() {
   const [isLoading, setIsLoading] = useState(true)
@@ -55,7 +57,9 @@ function App() {
       <ErrorBoundary>
         <>
           <ToastContainer />
-          <AdminPortal onNavigateHome={navigateHome} />
+          <Suspense fallback={<LoadingScreen onLoadingComplete={() => {}} />}>
+            <AdminPortal onNavigateHome={navigateHome} />
+          </Suspense>
         </>
       </ErrorBoundary>
     )
@@ -80,8 +84,12 @@ function App() {
           <Features />
           <Inventory />
           <Parts />
-          <GalleryWall />
-          <Showreel />
+          <Suspense fallback={<div className="h-96 bg-background" />}>
+            <GalleryWall />
+          </Suspense>
+          <Suspense fallback={<div className="h-96 bg-background" />}>
+            <Showreel />
+          </Suspense>
           <CTA />
           <Contact />
           <Footer />
