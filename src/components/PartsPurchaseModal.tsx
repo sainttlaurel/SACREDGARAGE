@@ -104,7 +104,7 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
             onClick={onClose}
           />
 
@@ -115,7 +115,7 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
             onClick={(e) => e.stopPropagation()}
-            className="fixed inset-4 md:inset-8 lg:inset-20 z-[51] flex items-center justify-center"
+            className="fixed inset-4 md:inset-8 lg:inset-20 z-[61] flex items-center justify-center"
           >
             <div className="bg-background border border-border rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
