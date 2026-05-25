@@ -10,8 +10,10 @@ import Contact from './components/Contact'
 import Footer from './components/Footer'
 import ThemeToggle from './components/ThemeToggle'
 import ToastContainer from './components/ToastContainer'
+import OfflineIndicator from './components/OfflineIndicator'
 import ErrorBoundary from './components/ErrorBoundary'
 import { loadFromSupabaseToLocalStorage, syncLocalStorageToSupabase } from './lib/syncToSupabase'
+import { initializeOfflineSupport } from './lib/offline'
 
 // Lazy load heavy components
 const GalleryWall = lazy(() => import('./components/GalleryWall'))
@@ -23,6 +25,9 @@ function App() {
   const [isAdminPage, setIsAdminPage] = useState(window.location.pathname === '/admin')
 
   useEffect(() => {
+    // Initialize offline support
+    initializeOfflineSupport()
+
     // Sync data on app load
     const initializeData = async () => {
       // First, load from Supabase to get latest data
@@ -69,6 +74,7 @@ function App() {
     <ErrorBoundary>
       <>
         <ToastContainer />
+        <OfflineIndicator />
         
         {/* Loading Screen */}
         {isLoading && <LoadingScreen onLoadingComplete={handleLoadingComplete} />}
