@@ -193,10 +193,6 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
             </button>
           </form>
 
-          <p className="text-xs text-foreground-muted mt-6 text-center">
-            Demo password: admin123
-          </p>
-
           <button
             onClick={onNavigateHome}
             className="w-full mt-4 text-xs opacity-60 hover:opacity-100 transition-opacity"
