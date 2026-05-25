@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { X, Send } from 'lucide-react'
 import { useState } from 'react'
 import { partOrdersService, Part } from '../lib/supabase'
@@ -6,10 +6,11 @@ import { partOrdersService, Part } from '../lib/supabase'
 interface PartsPurchaseModalProps {
   isOpen: boolean
   onClose: () => void
-  part: Part
+  part: Part | null
 }
 
 const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) => {
+  if (!part) return null
   const [formData, setFormData] = useState({
     quantity: 1,
     customerName: '',
@@ -94,20 +95,31 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
   if (!isOpen) return null
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-        className="bg-background border border-border rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-      >
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={onClose}
+          />
+
+          {/* Modal */}
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-4 md:inset-8 lg:inset-20 z-[51] flex items-center justify-center"
+          >
+            <div className="bg-background border border-border rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
         {/* Header */}
         <div className="sticky top-0 bg-background border-b border-border p-6 flex items-center justify-between">
           <div>
@@ -319,8 +331,11 @@ const PartsPurchaseModal = ({ isOpen, onClose, part }: PartsPurchaseModalProps) 
             * Required fields. We'll contact you to confirm your order.
           </p>
         </div>
-      </motion.div>
-    </motion.div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   )
 }
 
