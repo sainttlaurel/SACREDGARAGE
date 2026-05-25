@@ -30,11 +30,6 @@ function App() {
     setIsLoading(false)
   }
 
-  const navigateToAdmin = () => {
-    window.history.pushState({}, '', '/admin')
-    setIsAdminPage(true)
-  }
-
   const navigateHome = () => {
     window.history.pushState({}, '', '/')
     setIsAdminPage(false)
@@ -68,15 +63,6 @@ function App() {
 
         {/* Theme Toggle */}
         <ThemeToggle />
-
-        {/* Admin Link (hidden, accessible via /admin) */}
-        <button
-          onClick={navigateToAdmin}
-          className="fixed bottom-24 right-8 z-40 text-xs opacity-20 hover:opacity-60 transition-opacity"
-          title="Admin Portal"
-        >
-          Admin
-        </button>
       </div>
     </>
   )
