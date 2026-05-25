@@ -99,6 +99,24 @@ export interface PartOrder {
   updatedAt: string
 }
 
+export interface VehicleInquiry {
+  id: string
+  vehicleId: string
+  vehicleBrand: string
+  vehicleModel: string
+  vehicleYear: number
+  vehiclePrice: string
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  inquiryType: 'purchase' | 'trade-in' | 'financing' | 'other'
+  message: string
+  facebookProfile?: string
+  status: 'new' | 'contacted' | 'confirmed' | 'completed'
+  createdAt: string
+  updatedAt: string
+}
+
 // Inquiry functions
 export const inquiryService = {
   async getAll() {
@@ -777,6 +795,133 @@ export const partOrdersService = {
       const orders = saved ? JSON.parse(saved) : []
       const filtered = orders.filter((o: PartOrder) => o.id !== id)
       localStorage.setItem('part_orders', JSON.stringify(filtered))
+    }
+  }
+}
+
+
+// Vehicle Inquiries functions
+export const vehicleInquiryService = {
+  async getAll() {
+    if (!isSupabaseAvailable || !supabase) {
+      const saved = localStorage.getItem('vehicle_inquiries')
+      return saved ? JSON.parse(saved) : []
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('vehicle_inquiries')
+        .select('*')
+        .order('createdAt', { ascending: false })
+      
+      if (error) throw error
+      return data as VehicleInquiry[]
+    } catch (error) {
+      console.warn('Error fetching from Supabase, using localStorage:', error)
+      const saved = localStorage.getItem('vehicle_inquiries')
+      return saved ? JSON.parse(saved) : []
+    }
+  },
+
+  async create(inquiry: Omit<VehicleInquiry, 'id' | 'createdAt' | 'updatedAt'>) {
+    const newInquiry = {
+      id: Date.now().toString(),
+      ...inquiry,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+
+    if (!isSupabaseAvailable || !supabase) {
+      const saved = localStorage.getItem('vehicle_inquiries')
+      const inquiries = saved ? JSON.parse(saved) : []
+      inquiries.push(newInquiry)
+      localStorage.setItem('vehicle_inquiries', JSON.stringify(inquiries))
+      return newInquiry as VehicleInquiry
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('vehicle_inquiries')
+        .insert([newInquiry])
+        .select()
+        .single()
+      
+      if (error) throw error
+      return data as VehicleInquiry
+    } catch (error) {
+      console.warn('Error saving to Supabase, using localStorage:', error)
+      const saved = localStorage.getItem('vehicle_inquiries')
+      const inquiries = saved ? JSON.parse(saved) : []
+      inquiries.push(newInquiry)
+      localStorage.setItem('vehicle_inquiries', JSON.stringify(inquiries))
+      return newInquiry as VehicleInquiry
+    }
+  },
+
+  async update(id: string, updates: Partial<VehicleInquiry>) {
+    const updatedData = {
+      ...updates,
+      updatedAt: new Date().toISOString()
+    }
+
+    if (!isSupabaseAvailable || !supabase) {
+      const saved = localStorage.getItem('vehicle_inquiries')
+      const inquiries = saved ? JSON.parse(saved) : []
+      const index = inquiries.findIndex((i: VehicleInquiry) => i.id === id)
+      if (index !== -1) {
+        inquiries[index] = { ...inquiries[index], ...updatedData }
+        localStorage.setItem('vehicle_inquiries', JSON.stringify(inquiries))
+        return inquiries[index]
+      }
+      throw new Error('Inquiry not found')
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('vehicle_inquiries')
+        .update(updatedData)
+        .eq('id', id)
+        .select()
+        .single()
+      
+      if (error) throw error
+      return data as VehicleInquiry
+    } catch (error) {
+      console.warn('Error updating in Supabase, using localStorage:', error)
+      const saved = localStorage.getItem('vehicle_inquiries')
+      const inquiries = saved ? JSON.parse(saved) : []
+      const index = inquiries.findIndex((i: VehicleInquiry) => i.id === id)
+      if (index !== -1) {
+        inquiries[index] = { ...inquiries[index], ...updatedData }
+        localStorage.setItem('vehicle_inquiries', JSON.stringify(inquiries))
+        return inquiries[index]
+      }
+      throw new Error('Inquiry not found')
+    }
+  },
+
+  async delete(id: string) {
+    if (!isSupabaseAvailable || !supabase) {
+      const saved = localStorage.getItem('vehicle_inquiries')
+      const inquiries = saved ? JSON.parse(saved) : []
+      const filtered = inquiries.filter((i: VehicleInquiry) => i.id !== id)
+      localStorage.setItem('vehicle_inquiries', JSON.stringify(filtered))
+      return
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('vehicle_inquiries')
+        .delete()
+        .eq('id', id)
+      
+      if (error) throw error
+    } catch (error) {
+      console.warn('Error deleting from Supabase, using localStorage:', error)
+      const saved = localStorage.getItem('vehicle_inquiries')
+      const inquiries = saved ? JSON.parse(saved) : []
+      const filtered = inquiries.filter((i: VehicleInquiry) => i.id !== id)
+      localStorage.setItem('vehicle_inquiries', JSON.stringify(filtered))
     }
   }
 }

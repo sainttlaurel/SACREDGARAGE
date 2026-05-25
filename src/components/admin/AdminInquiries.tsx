@@ -11,6 +11,25 @@ const AdminInquiries = () => {
 
   useEffect(() => {
     loadInquiries()
+
+    // Listen for storage changes (real-time sync)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'inquiries' && e.newValue) {
+        try {
+          const updatedInquiries = JSON.parse(e.newValue)
+          setInquiries(updatedInquiries)
+          console.log('✅ Inquiries updated from changes')
+        } catch (error) {
+          console.error('Error parsing updated inquiries:', error)
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
   }, [])
 
   const loadInquiries = async () => {

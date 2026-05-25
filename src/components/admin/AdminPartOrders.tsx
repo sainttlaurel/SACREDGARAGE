@@ -25,29 +25,12 @@ const AdminPartOrders = () => {
       }
     }
 
-    // Poll for changes every 2 seconds
-    const pollInterval = setInterval(() => {
-      const savedOrders = localStorage.getItem('part_orders')
-      if (savedOrders) {
-        try {
-          const parsedOrders = JSON.parse(savedOrders)
-          if (JSON.stringify(parsedOrders) !== JSON.stringify(orders)) {
-            setOrders(parsedOrders)
-            console.log('✅ Part orders synced via polling')
-          }
-        } catch (error) {
-          console.error('Error polling orders:', error)
-        }
-      }
-    }, 2000)
-
     window.addEventListener('storage', handleStorageChange)
 
     return () => {
       window.removeEventListener('storage', handleStorageChange)
-      clearInterval(pollInterval)
     }
-  }, [orders])
+  }, [])
 
   const loadOrders = async () => {
     try {
