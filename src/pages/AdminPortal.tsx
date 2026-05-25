@@ -29,15 +29,6 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
   useEffect(() => {
     // Check if user is already logged in
     const checkAuth = async () => {
-      // Check localStorage fallback first
-      const adminAuth = localStorage.getItem('adminAuth')
-      if (adminAuth === 'true') {
-        console.log('User authenticated via localStorage')
-        setIsAuthenticated(true)
-        return
-      }
-
-      // Then check Supabase
       if (!supabase) {
         console.log('Supabase not initialized')
         return
@@ -50,7 +41,7 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
           return
         }
         if (session?.user) {
-          console.log('User already logged in via Supabase:', session.user.email)
+          console.log('User already logged in:', session.user.email)
           setIsAuthenticated(true)
         }
       } catch (error) {
@@ -81,60 +72,33 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
       return
     }
 
+    if (!supabase) {
+      setToastMessage('Supabase not available. Please check your configuration.')
+      setToastType('error')
+      setShowToast(true)
+      return
+    }
+
     setIsLoading(true)
     try {
       console.log('Attempting login with email:', email)
-      
-      // Try Supabase Auth first
-      if (supabase) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password
-        })
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password
+      })
 
-        if (error) {
-          console.warn('Supabase auth error:', error.message)
-          // Fall back to simple validation
-          if (email === 'debugdummy26@gmail.com' && password === 'admin123') {
-            console.log('Using fallback authentication')
-            setIsAuthenticated(true)
-            localStorage.setItem('adminAuth', 'true')
-            localStorage.setItem('adminEmail', email)
-            setEmail('')
-            setPassword('')
-            setToastMessage('Login successful!')
-            setToastType('success')
-            setShowToast(true)
-          } else {
-            setToastMessage('Invalid email or password.')
-            setToastType('error')
-            setShowToast(true)
-          }
-        } else {
-          console.log('Supabase login successful:', data.user?.email)
-          setEmail('')
-          setPassword('')
-          setToastMessage('Login successful!')
-          setToastType('success')
-          setShowToast(true)
-        }
+      if (error) {
+        console.error('Login error:', error.message)
+        setToastMessage(error.message || 'Invalid email or password.')
+        setToastType('error')
+        setShowToast(true)
       } else {
-        // Supabase not available, use fallback
-        console.log('Supabase not available, using fallback auth')
-        if (email === 'debugdummy26@gmail.com' && password === 'admin123') {
-          setIsAuthenticated(true)
-          localStorage.setItem('adminAuth', 'true')
-          localStorage.setItem('adminEmail', email)
-          setEmail('')
-          setPassword('')
-          setToastMessage('Login successful!')
-          setToastType('success')
-          setShowToast(true)
-        } else {
-          setToastMessage('Invalid email or password.')
-          setToastType('error')
-          setShowToast(true)
-        }
+        console.log('Login successful:', data.user?.email)
+        setEmail('')
+        setPassword('')
+        setToastMessage('Login successful!')
+        setToastType('success')
+        setShowToast(true)
       }
     } catch (error) {
       console.error('Login exception:', error)
@@ -147,17 +111,10 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
   }
 
   const handleLogout = async () => {
+    if (!supabase) return
+
     try {
-      // Clear Supabase session
-      if (supabase) {
-        await supabase.auth.signOut()
-      }
-      
-      // Clear localStorage fallback
-      localStorage.removeItem('adminAuth')
-      localStorage.removeItem('adminEmail')
-      
-      setIsAuthenticated(false)
+      await supabase.auth.signOut()
       setEmail('')
       setPassword('')
       setToastMessage('Logged out successfully')
@@ -166,11 +123,9 @@ const AdminPortal = ({ onNavigateHome }: AdminPortalProps) => {
       onNavigateHome()
     } catch (error) {
       console.error('Logout error:', error)
-      // Still logout even if error
-      setIsAuthenticated(false)
-      localStorage.removeItem('adminAuth')
-      localStorage.removeItem('adminEmail')
-      onNavigateHome()
+      setToastMessage('Error logging out')
+      setToastType('error')
+      setShowToast(true)
     }
   }
 
