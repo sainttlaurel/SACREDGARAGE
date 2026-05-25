@@ -3,11 +3,20 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase environment variables')
+let supabase: any = null
+let supabaseError: Error | null = null
+
+try {
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables')
+  }
+  supabase = createClient(supabaseUrl, supabaseKey)
+} catch (error) {
+  supabaseError = error as Error
+  console.error('Supabase initialization error:', supabaseError)
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export { supabase, supabaseError }
 
 // Types for database tables
 export interface Inquiry {
@@ -52,6 +61,8 @@ export interface BusinessSettings {
 // Inquiry functions
 export const inquiryService = {
   async getAll() {
+    if (!supabase) throw new Error('Supabase not initialized')
+    
     const { data, error } = await supabase
       .from('inquiries')
       .select('*')
@@ -62,6 +73,8 @@ export const inquiryService = {
   },
 
   async getById(id: string) {
+    if (!supabase) throw new Error('Supabase not initialized')
+    
     const { data, error } = await supabase
       .from('inquiries')
       .select('*')
@@ -73,6 +86,8 @@ export const inquiryService = {
   },
 
   async create(inquiry: Omit<Inquiry, 'id' | 'createdAt' | 'updatedAt'>) {
+    if (!supabase) throw new Error('Supabase not initialized')
+    
     const { data, error } = await supabase
       .from('inquiries')
       .insert([{
@@ -88,6 +103,8 @@ export const inquiryService = {
   },
 
   async update(id: string, updates: Partial<Inquiry>) {
+    if (!supabase) throw new Error('Supabase not initialized')
+    
     const { data, error } = await supabase
       .from('inquiries')
       .update({
@@ -103,6 +120,8 @@ export const inquiryService = {
   },
 
   async delete(id: string) {
+    if (!supabase) throw new Error('Supabase not initialized')
+    
     const { error } = await supabase
       .from('inquiries')
       .delete()
@@ -115,6 +134,8 @@ export const inquiryService = {
 // Vehicle functions
 export const vehicleService = {
   async getAll() {
+    if (!supabase) throw new Error('Supabase not initialized')
+    
     const { data, error } = await supabase
       .from('vehicles')
       .select('*')
@@ -125,6 +146,8 @@ export const vehicleService = {
   },
 
   async getById(id: string) {
+    if (!supabase) throw new Error('Supabase not initialized')
+    
     const { data, error } = await supabase
       .from('vehicles')
       .select('*')
@@ -136,6 +159,8 @@ export const vehicleService = {
   },
 
   async create(vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>) {
+    if (!supabase) throw new Error('Supabase not initialized')
+    
     const { data, error } = await supabase
       .from('vehicles')
       .insert([{
@@ -151,6 +176,8 @@ export const vehicleService = {
   },
 
   async update(id: string, updates: Partial<Vehicle>) {
+    if (!supabase) throw new Error('Supabase not initialized')
+    
     const { data, error } = await supabase
       .from('vehicles')
       .update({
@@ -166,6 +193,8 @@ export const vehicleService = {
   },
 
   async delete(id: string) {
+    if (!supabase) throw new Error('Supabase not initialized')
+    
     const { error } = await supabase
       .from('vehicles')
       .delete()
@@ -178,6 +207,8 @@ export const vehicleService = {
 // Business Settings functions
 export const settingsService = {
   async get() {
+    if (!supabase) throw new Error('Supabase not initialized')
+    
     const { data, error } = await supabase
       .from('business_settings')
       .select('*')
@@ -188,6 +219,8 @@ export const settingsService = {
   },
 
   async update(updates: Partial<BusinessSettings>) {
+    if (!supabase) throw new Error('Supabase not initialized')
+    
     const existing = await this.get()
     
     if (!existing) {
