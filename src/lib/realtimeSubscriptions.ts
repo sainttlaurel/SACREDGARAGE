@@ -84,7 +84,7 @@ const fetchAndUpdateTable = async (
     const { data, error } = await supabase
       .from(tableName)
       .select('*')
-      .order('createdAt', { ascending: false })
+      .order('created_at', { ascending: false })
 
     if (error) {
       console.error(`❌ Error fetching ${tableName}:`, error)
@@ -141,7 +141,7 @@ export const loadInitialData = async (tableName: TableName): Promise<any[]> => {
     const { data, error } = await supabase
       .from(tableName)
       .select('*')
-      .order('createdAt', { ascending: false })
+      .order('created_at', { ascending: false })
 
     if (error) {
       console.error(`❌ Error loading ${tableName}:`, error)
