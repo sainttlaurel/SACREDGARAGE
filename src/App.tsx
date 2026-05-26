@@ -14,6 +14,7 @@ import OfflineIndicator from './components/OfflineIndicator'
 import ErrorBoundary from './components/ErrorBoundary'
 import { loadFromSupabaseToLocalStorage, syncLocalStorageToSupabase } from './lib/syncToSupabase'
 import { initializeOfflineSupport } from './lib/offline'
+import { initializeDefaultData } from './lib/initializeData'
 
 // Lazy load heavy components
 const GalleryWall = lazy(() => import('./components/GalleryWall'))
@@ -27,6 +28,9 @@ function App() {
   useEffect(() => {
     // Initialize offline support
     initializeOfflineSupport()
+
+    // Initialize default data in localStorage
+    initializeDefaultData()
 
     // Sync data on app load
     const initializeData = async () => {
